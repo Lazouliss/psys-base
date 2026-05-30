@@ -5595,7 +5595,10 @@ History:
 static void mem_bug(const char *_reason)
 {
 	printf("%s\n", _reason);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wanalyzer-null-dereference"
 	*(char *)0 = 1;
+#pragma GCC diagnostic pop
 }
 
 void *mem_alloc(unsigned long length)

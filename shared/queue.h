@@ -60,7 +60,7 @@ typedef struct list_link {
  * Les zones mémoires données par l'allocateur ou allouées à la compilation
  * sont initialisées à 0 (respectivement par l'allocateur et par le crt0).
  */
-#define INIT_LINK(ptr) do { struct list_link *__l = (ptr); __l->next = 0; __l->prev = 0; } while (0)
+#define INIT_LINK(ptr) do { struct list_link *__l = (ptr); __l->next = nullptr; __l->prev = nullptr; } while (0)
 
 /**
  * Ajout d'un élément dans la file avec tri par priorité
@@ -70,20 +70,20 @@ typedef struct list_link {
  * listfield : nom du champ du lien de chainage
  * priofield : nom du champ de la priorité
  */
-#define queue_add(ptr_elem, head, type, listfield, priofield)                 \
-	do {                                                                  \
-		link *__cur_link=head;                                        \
-		type *__elem = (ptr_elem);                                    \
-		link *__elem_link=&((__elem)->listfield);                     \
-                assert((__elem_link->prev == 0) && (__elem_link->next == 0)); \
-		do  __cur_link=__cur_link->next;                              \
-	   	while ( (__cur_link != head) &&                               \
-		        (((queue_entry(__cur_link,type,listfield))->priofield)\
-	     	               < ((__elem)->priofield)) );                    \
-	   	__elem_link->next=__cur_link;                                 \
-	   	__elem_link->prev=__cur_link->prev;                           \
-	   	__cur_link->prev->next=__elem_link;                           \
-	   	__cur_link->prev=__elem_link;                                 \
+#define queue_add(ptr_elem, head, type, listfield, priofield)                             \
+	do {                                                                              \
+		link *__cur_link=head;                                                    \
+		type *__elem = (ptr_elem);                                                \
+		link *__elem_link=&((__elem)->listfield);                                 \
+                assert((__elem_link->prev == nullptr) && (__elem_link->next == nullptr)); \
+		do  __cur_link=__cur_link->next;                                          \
+	   	while ( (__cur_link != head) &&                                           \
+		        (((queue_entry(__cur_link,type,listfield))->priofield)            \
+	     	               < ((__elem)->priofield)) );                                \
+	   	__elem_link->next=__cur_link;                                             \
+	   	__elem_link->prev=__cur_link->prev;                                       \
+	   	__cur_link->prev->next=__elem_link;                                       \
+	   	__cur_link->prev=__elem_link;                                             \
 	} while (0)
 
 /**
@@ -133,14 +133,14 @@ static __inline__ void *__queue_out(link *head, unsigned long diff)
 	unsigned long ptr_link_ret=(unsigned long)(head->prev);
 
 	//Si la file est vide, on retourne le pointeur NULL.
-	if (queue_empty(head)) return ((void *)0);
+	if (queue_empty(head)) return ((void *)nullptr);
 
 	//Sinon on retire l'élément de la liste,
 	head->prev=head->prev->prev;
 	head->prev->next=head;
 
-	((link *)ptr_link_ret)->prev = 0;
-	((link *)ptr_link_ret)->next = 0;
+	((link *)ptr_link_ret)->prev = nullptr;
+	((link *)ptr_link_ret)->next = nullptr;
 
 	//Et on retourne un pointeur vers cet élément.
 	return ((void *)(ptr_link_ret-diff));
@@ -152,14 +152,14 @@ static __inline__ void *__queue_out(link *head, unsigned long diff)
  * ptr_elem  : pointeur vers l'élément à supprimer
  * listfield : nom du champ du lien de chainage
  */
-#define queue_del(ptr_elem, listfield)                                       \
-	do {                                                                 \
-		link *__elem_link=&((ptr_elem)->listfield);                  \
-                assert((__elem_link->prev != 0) && (__elem_link->next != 0)); \
-		__elem_link->prev->next=__elem_link->next;                   \
-	   	__elem_link->next->prev=__elem_link->prev;                   \
-                __elem_link->next = 0;                                       \
-                __elem_link->prev = 0;                                       \
+#define queue_del(ptr_elem, listfield)                                                    \
+	do {                                                                              \
+		link *__elem_link=&((ptr_elem)->listfield);                               \
+                assert((__elem_link->prev != nullptr) && (__elem_link->next != nullptr)); \
+		__elem_link->prev->next=__elem_link->next;                                \
+	   	__elem_link->next->prev=__elem_link->prev;                                \
+                __elem_link->next = nullptr;                                              \
+                __elem_link->prev = nullptr;                                              \
 	} while (0)
 
 

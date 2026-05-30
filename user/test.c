@@ -5,6 +5,7 @@
 
 //XXX Assurer que l'oubli d'une option fait planter la compilation
 //XXX Verifier l'absence de caracteres non ASCII
+// @Grégory Mounié 2026: C23ification
 
 /*******************************************************************************
  * Gestion de liste d'arguments de taille variable (printf)
@@ -119,20 +120,20 @@ typedef __gnuc_va_list va_list;
 
 // Prototype des appels systeme de la spec
 int chprio(int pid, int newprio);
-void cons_write(const char *str, unsigned long size);
-int cons_read(char *str, unsigned long size);
+void cons_write( unsigned long const size, const char str[static size]);
+int cons_read(unsigned long const size, char str[static size]);
 void cons_echo(int on);
 void exit(int retval);
 int getpid(void);
 int getprio(int pid);
 int kill(int pid);
-int pcount(int fid, int *count);
+int pcount(int fid, int count[static 1]);
 int pcreate(int count);
 int pdelete(int fid);
 int preceive(int fid,int *message);
 int preset(int fid);
 int psend(int fid, int message);
-void clock_settings(unsigned long *quartz, unsigned long *ticks);
+void clock_settings(unsigned long quartz[static 1], unsigned long ticks[static 1]);
 unsigned long current_clock(void);
 void wait_clock(unsigned long wakeup);
 int start(int (*ptfunc)(void *), unsigned long ssize, int prio, const char *name, void *arg);
@@ -167,7 +168,7 @@ strlen(const char *s)
 static void
 cons_puts(const char *s)
 {
-	cons_write(s, strlen(s));
+    cons_write(strlen(s), s);
 }
 
 /*******************************************************************************
@@ -756,14 +757,14 @@ cons_gets(char *s, unsigned long length)
 	cons_echo(0);
 	while (n < (length-1)) {
 	    char c;
-	    cons_read(&c, 1);
+	    cons_read(1, &c);
 		if ((c <= 126) && (c >= 32)) {
 			s[n] = c;
-			cons_write(s + n, 1);
+			cons_write(1, s + n);
 			n++;
 		} else if ((c == '\n') || (c == 13)) {
 			s[n] = 0;
-			cons_write("\n", 1);
+			cons_write(1, "\n");
 			cons_echo(1);
 			return;
 		} else if ((c == 8) || (c == 127)) {
@@ -2413,7 +2414,7 @@ test18(void)
 	}
 	waitpid(-1, 0);
 	waitpid(-1, 0);
-	cons_write((char *)0x100000, 50);
+	cons_write(50, (char *)0x100000);
 	assert(start(dummy2, 4000, 100, (void *)0x100000, 0) < 0);
 	printf("3.\n");
 }
@@ -2429,7 +2430,7 @@ cons_reader(void *arg)
 {
 	int fid = (int)arg;
 	char c;
-	cons_read(&c, 1);
+	cons_read(1, &c);
 	assert(psend(fid, 1) == 0);
 	printf(" %d (%c)", 134 - getprio(getpid()), c);
 	return 0;
@@ -2625,7 +2626,7 @@ philosophe(void *arg)
 }
 
 static int
-launch_philo()
+launch_philo([[maybe_unused]] void *arg)
 {
 
 	int i, pid;

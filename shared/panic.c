@@ -31,6 +31,9 @@ void __attribute__((noreturn)) panic(const char *fmt, ...)
 	va_start(ap, fmt);
 	vprintf(fmt, ap);
 	va_end(ap);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wanalyzer-null-dereference"	
 	*(char *)0 = 1;
+#pragma GCC diagnostic pop
 	while (1);
 }
