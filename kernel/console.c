@@ -1,14 +1,8 @@
-#include "stdint.h"
-#include "stdbool.h"
-#include "cpu.h"
-#include "string.h"
+#include "screen.h"
+#include "console.h"
 
-const uint16_t* VGABASE = (uint16_t*)0xB8000;
 uint16_t ROW = 0;
 uint16_t COL = 0;
-uint16_t ROW_MAX = 25;
-uint16_t COL_MAX = 80;
-
 
 const uint16_t* ptr_mem(uint32_t lig, uint32_t col)
 {
@@ -25,7 +19,7 @@ const uint16_t* ptr_mem(uint32_t lig, uint32_t col)
 void ecrit_car(uint32_t lig, uint32_t col, char c, uint8_t ct, uint8_t cf, bool cl)
 {
     uint16_t* ptr = (uint16_t*)ptr_mem(lig, col);
-    *ptr = (c << 8) | (cl << 7) | (cf << 4) | (ct); 
+    *ptr = (cl << 15) | (cf << 12) | (ct << 8) | c; 
 }
 
 void place_curseur(uint32_t lig, uint32_t col)
@@ -59,9 +53,7 @@ void efface_ecran(void)
 void place_next_pos_cursor(){
     if(++COL >= COL_MAX) {
         COL = 0;
-        if(++ROW >= ROW_MAX) {
-            ROW = 0;
-        }
+        ROW++; // Dépassement de la dernière ligne, prit en compte par défillement() dans console_putbytes()
     }
     place_curseur(ROW, COL);
 }
@@ -89,10 +81,7 @@ void traite_car(char c)
         break;
     case 10: // Newline
         COL = 0;
-        ROW++;
-        if(ROW >= ROW_MAX) {
-            ROW = 0;
-        }
+        ROW++; // Dépassement de la dernière ligne, prit en compte par défillement() dans console_putbytes()
         break;
     case 12: // efface l'écran
         efface_ecran();
@@ -116,5 +105,16 @@ void defilement()
     // Efface la dernière ligne après le défilement
     for (uint32_t col = 0; col < COL_MAX; col++) {
         ecrit_car(ROW_MAX - 1, col, ' ', 15, 0, false); // Efface la dernière ligne
+    }
+}
+
+void console_putbytes(const char *chaine, int taille)
+{
+    for (int i = 0; i < taille; i++) {
+        traite_car(chaine[i]);
+        if(ROW >= ROW_MAX) {
+            defilement();
+            ROW = ROW_MAX - 1;
+        }
     }
 }
