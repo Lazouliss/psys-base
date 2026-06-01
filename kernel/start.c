@@ -2,6 +2,7 @@
 #include "cpu.h"
 #include "../shared/stdio.h"
 #include "../kernel/screen.h"
+#include "../kernel/horloge.h"
 
 int fact(int n)
 {
@@ -38,6 +39,11 @@ void kernel_start(void)
 	place_curseur(12, 40);
 	// Reviens au début de la ligne, puis écrit 5 caractères, et place le curseur SUR le dernier caractère
 	printf("\r klfd\b");
+
+	/*************************/
+	/* Tests simples horloge */
+	/*************************/
+	print_horloge("12:34:56");
 	
 	while(1)
 	  hlt();
