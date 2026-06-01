@@ -1,6 +1,7 @@
 #include "stdint.h"
 #include "stdbool.h"
 #include "cpu.h"
+#include "string.h"
 
 const uint16_t* VGABASE = (uint16_t*)0xB8000;
 uint16_t ROW = 0;
@@ -67,7 +68,7 @@ void place_next_pos_cursor(){
 
 void traite_car(char c)
 {
-    // Switch pour les caractères de contrôle, suivi du placement du curseur
+    // Switch pour les caractères, suivi du placement du curseur
     switch (c)
     {
     case 8: // Backspace
@@ -106,4 +107,14 @@ void traite_car(char c)
         break;
     }
     place_curseur(ROW, COL);
+}
+
+void defilement()
+{
+    // Remonte les lignes de 1 à ROM_MAX, de une ligne
+    memmove((void*)ptr_mem(0, 0), (void*)ptr_mem(1, 0), (ROW_MAX - 1) * COL_MAX * sizeof(uint16_t));
+    // Efface la dernière ligne après le défilement
+    for (uint32_t col = 0; col < COL_MAX; col++) {
+        ecrit_car(ROW_MAX - 1, col, ' ', 15, 0, false); // Efface la dernière ligne
+    }
 }
