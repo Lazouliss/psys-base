@@ -24,7 +24,9 @@ void ecrit_car(uint32_t lig, uint32_t col, char c, uint8_t ct, uint8_t cf, bool 
 
 void place_curseur(uint32_t lig, uint32_t col)
 {
-    uint16_t pos = lig * COL_MAX + col;
+    ROW = lig;
+    COL = col;
+    uint16_t pos = ROW * COL_MAX + COL;
       
     // indiquer à la carte que l'on va envoyer la partie basse de la position du curseur
     outb(0x0F, 0x3D4);
