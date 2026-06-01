@@ -8,8 +8,8 @@ DIRS=. ../shared
 OUTPUT := out
 OBJS   := $(addprefix $(OUTPUT)/, $(patsubst %.S, %.o, $(patsubst %.c, %.o, $(FILES))))
 
-CC=gcc -m32
-AS=gcc -m32
+CC=gcc-14 -m32
+AS=gcc-14 -m32
 LD=ld -melf_i386
 
 KFLAGS=-Wall -Wextra -g -pipe -std=gnu23 -fanalyzer -nostdinc -fno-stack-protector

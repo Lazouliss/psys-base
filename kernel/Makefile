@@ -5,11 +5,11 @@
 # Copyright (C) 2014,2019 - Grégory Mounie <Gregory.Mounie@imag.fr>
 
 ### Tools ###
-CC := gcc
-AS := gcc
+CC := gcc-14
+AS := gcc-14
 LD := ld
 AR := ar
-DEP := gcc
+DEP := gcc-14
 OBJCOPY := objcopy
 MKDIR := mkdir
 CP := cp
