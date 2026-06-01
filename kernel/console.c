@@ -35,3 +35,14 @@ void place_curseur(uint32_t lig, uint32_t col)
     // envoyer la partie haute de la position sur le port de données
     outb((pos >> 8) & 0xFF, 0x3D5);
 }
+
+void efface_ecran(void)
+{
+    for (uint32_t lig = 0; lig < 25; lig++) {
+        for (uint32_t col = 0; col < 80; col++) {
+            // Efface l'écran en écrivant un espace avec les couleurs par défaut (caractère blanc sur fond noir)
+            ecrit_car(lig, col, ' ', 15, 0, false);
+        }
+    }
+    place_curseur(0, 0);
+}
