@@ -1,5 +1,6 @@
 #include "horloge.h"
 #include "segment.h"
+#include "screen.h"
 
 uint32_t ticks = 0;
 
@@ -13,7 +14,7 @@ void print_horloge(char* time_str)
     int col_start = COL_MAX - len;
     for (int i = 0; i < len; i++) {
         // noir sur fond gris, sans clignotement -> pour mettre l'horloge en évidence
-        ecrit_car(0, col_start + i, time_str[i], 7, 0, false);
+        ecrit_car(0, col_start + i, time_str[i], 0, 7, false);
     }
 }
 
