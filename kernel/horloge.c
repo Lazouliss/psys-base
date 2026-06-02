@@ -5,8 +5,16 @@ uint32_t ticks = 0;
 
 void print_horloge(char* time_str)
 {
-    place_curseur(0, COL_MAX - 8); // Place le curseur à la ligne 0, colonne 72 (8 caractères pour l'heure)
-    printf("%s", time_str);
+    // Calcul de la longueur de la chaîne (en général 8 pour "HH:MM:SS")
+    int len = 0;
+    while (time_str[len])
+        len++;
+
+    int col_start = COL_MAX - len;
+    for (int i = 0; i < len; i++) {
+        // noir sur fond gris, sans clignotement -> pour mettre l'horloge en évidence
+        ecrit_car(0, col_start + i, time_str[i], 7, 0, false);
+    }
 }
 
 void tic_PIT(void) 
