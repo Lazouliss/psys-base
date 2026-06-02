@@ -37,3 +37,34 @@ void init_traitant_IT(int32_t num_IT, void (*traitant)(void))
     // Deuxième mot : bits hauts de l'adresse en bits 31-16, 0x8E00 en bits 15-0
     IDT_BASE[num_IT * 2 + 1] = (addr & 0xFFFF0000) | 0x8E00;
 }
+
+// Masque (masque=true) ou démasque (masque=false) l'IRQ num_IRQ (0-7)
+void masque_IRQ(uint32_t num_IRQ, bool masque)
+{
+    // lire la valeur actuelle du masque sur le port de données 0x21
+    uint8_t mask = inb(0x21);
+    // IRQ N vaut 1 si IRQ est masquée, 0 si elle est autorisée
+    if (masque)
+        mask |= (uint8_t)(1u << num_IRQ);
+    else
+        mask &= (uint8_t)(0u << num_IRQ);      // (uint8_t)~(1u << num_IRQ);
+    // envoyer le masque sur le port de données 0x21
+    outb(mask, 0x21);
+}
+
+// Configure la fréquence de l'horloge programmable et installe le traitant
+void config_horloge(void)
+{
+    // installation du traitant pour l'interruption 32 (IRQ0)
+    init_traitant_IT(32, traitant_IT_32);
+
+    // on envoie la commande sur 8 bits 0x34 sur le port de commande 0x43
+    outb(0x34, 0x43);
+    // 8 bits de poids faibles
+    outb((uint8_t)((QUARTZ / CLOCKFREQ) % 256), 0x40);
+    // 8 bits de poids forts
+    outb((uint8_t)((QUARTZ / CLOCKFREQ) / 256), 0x40);
+
+    // démasquage de l'IRQ0 pour autoriser les signaux de l'horloge
+    masque_IRQ(0, false);
+}
