@@ -1,4 +1,5 @@
 #include "horloge.h"
+#include "segment.h"
 
 uint32_t ticks = 0;
 
@@ -30,5 +31,9 @@ void tic_PIT(void)
 
 void init_traitant_IT(int32_t num_IT, void (*traitant)(void))
 {
-    
+    uint32_t addr = (uint32_t)traitant;
+    // Premier mot : KERNEL_CS en bits 31-16, bits bas de l'adresse en bits 15-0
+    IDT_BASE[num_IT * 2]     = ((uint32_t)KERNEL_CS << 16) | (addr & 0xFFFF);
+    // Deuxième mot : bits hauts de l'adresse en bits 31-16, 0x8E00 en bits 15-0
+    IDT_BASE[num_IT * 2 + 1] = (addr & 0xFFFF0000) | 0x8E00;
 }
