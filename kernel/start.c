@@ -43,8 +43,8 @@ void kernel_start(void)
 	/*************************/
 	/* Tests simples horloge */
 	/*************************/
-	print_horloge("12:34:56");
-	tic_PIT();
+	//print_horloge("12:34:56");
+	config_horloge();
 	
 	// démasquage des interruptions externes
     sti();
