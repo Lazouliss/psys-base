@@ -34,7 +34,7 @@ void kernel_start(void)
 	// Test tabulation
 	printf("tab\tulation\n");
 	// Test defilement()
-	printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nderniere lignes");
+	printf("ééé\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nderniere lignes");
 	// Test place_curseur() au milieu de l'écran
 	place_curseur(12, 40);
 	// Reviens au début de la ligne, puis écrit 5 caractères, et place le curseur SUR le dernier caractère

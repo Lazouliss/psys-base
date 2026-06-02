@@ -91,11 +91,13 @@ void traite_car(char c)
     case 13: // Retour chariot
         COL = 0;
         break;
-    default:
+    case 32 ... 126:
         // Comportement par défaut : Afficher le caractère à la position actuelle du curseur
         ecrit_car(ROW, COL, c, 15, 0, false); // Affiche le caractère avec les couleurs par défaut
         place_next_pos_cursor();
         break;
+    default:
+        // Caractères non imprimables autres que ceux gérés sont ignorés
     }
     place_curseur(ROW, COL);
 }
