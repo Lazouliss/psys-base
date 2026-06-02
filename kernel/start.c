@@ -17,21 +17,21 @@ int fact(int n)
 /* Décla function process */
 /**************************/
 void idle(void) {
-	for (int i = 0; i < 3; i++) {
-		printf("[idle] je tente de passer la main a proc1...\n");
-		ctx_sw(processus_table[0].registers, processus_table[1].registers);
-		printf("[idle] proc1 m'a redonne la main\n");
-	}
-	printf("[idle] je bloque le systeme\n");
-	hlt();
+  for (;;) {
+    printf("[%s] pid = %i\n", mon_nom(), mon_pid());
+    for (int32_t i = 0; i < 100000000; i++)
+      ;
+    ordonnance();
+  }
 }
 
 void proc1(void) {
-	for (;;) {
-		printf("[proc1] idle m'a donne la main\n");
-		printf("[proc1] je tente de lui la redonner...\n");
-		ctx_sw(processus_table[1].registers, processus_table[0].registers);
-	}
+  for (;;) {
+    printf("[%s] pid = %i\n", mon_nom(), mon_pid());
+    for (int32_t i = 0; i < 100000000; i++)
+      ;
+    ordonnance();
+  }
 }
 
 void kernel_start(void)
@@ -60,6 +60,8 @@ void kernel_start(void)
 	place_curseur(12, 40);
 	// Reviens au début de la ligne, puis écrit 5 caractères, et place le curseur SUR le dernier caractère
 	printf("\r klfd\b");
+	// Nettoyage de tout l'écran
+	printf("\f");
 
 	/*************************/
 	/* Tests simples horloge */
@@ -76,13 +78,14 @@ void kernel_start(void)
 	// Initialisation du processus idle
 	processus_table[0].pid = 0;
 	processus_table[0].name = "idle";
-	processus_table[0].state = RUNNING;
+	processus_table[0].state = ELU;
 	// idle utilise directement la pile noyau, pas besoin d'initialiser regs
+	actif = &processus_table[0];
 
 	// Initialisation du processus proc1
 	processus_table[1].pid = 1;
 	processus_table[1].name = "proc1";
-	processus_table[1].state = READY;
+	processus_table[1].state = ACTIVABLE;
 	// Placer l'adresse de proc1 en sommet de pile et initialiser %esp
 	processus_table[1].stack[MAX_STACK_SIZE - 1] = (uint32_t)proc1;
 	processus_table[1].registers[1] = (uint32_t)&processus_table[1].stack[MAX_STACK_SIZE - 1];

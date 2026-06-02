@@ -8,9 +8,9 @@
 
 typedef enum
 {
-    READY = 0,
-    RUNNING = 1,
-    SLEEPING = 2
+    ACTIVABLE = 0,
+    ELU = 1,
+    ENDORMI = 2
 } states;
 
 typedef struct
@@ -23,6 +23,11 @@ typedef struct
 } processus_t;
 
 extern processus_t processus_table[MAX_PROCESSES];
+extern processus_t* actif;
 extern void ctx_sw(uint32_t* old_reg, uint32_t* new_reg); // Fonction context_switch en assembleur (ctx_sw.S)
+
+int32_t mon_pid();
+char* mon_nom();
+void ordonnance(void);
 
 #endif
