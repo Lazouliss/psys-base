@@ -2,7 +2,7 @@
 #include "segment.h"
 #include "screen.h"
 
-uint32_t ticks = 0;
+uint32_t ticks = 0;    // to test : 183550 => 01:01:11
 
 void print_horloge(char* time_str)
 {
