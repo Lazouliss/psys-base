@@ -1,6 +1,7 @@
 #include "horloge.h"
 #include "segment.h"
 #include "screen.h"
+#include "processus.h"
 
 uint32_t ticks = 0;    // to test : 183550 => 01:01:11
 
@@ -24,6 +25,7 @@ void tic_PIT(void)
 
     // increment ticks
     ticks++;
+    ordonnance();
 
     // Mise à jour à chaque seconde
     if (ticks % CLOCKFREQ == 0) {
