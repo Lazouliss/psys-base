@@ -9,7 +9,8 @@
 #include "debug.h"
 
 #define QUARTZ 0x1234DD
-#define CLOCKFREQ 50
+#define CLOCKFREQ 100
+#define SCHEDFREQ 50
 #define IDT_BASE ((uint32_t *)0x1000)
 
 // fonction assembleur dans traitant.S

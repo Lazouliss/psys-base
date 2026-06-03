@@ -1,38 +1,5 @@
-#include "debugger.h"
-#include "cpu.h"
-#include "../shared/stdio.h"
-#include "../kernel/screen.h"
-#include "../kernel/horloge.h"
-#include "../kernel/processus.h"
-
-int fact(int n)
-{
-	if (n < 2)
-		return 1;
-
-	return n * fact(n-1);
-}
-
-/**************************/
-/* Décla function process */
-/**************************/
-void idle(void) {
-  for (;;) {
-    printf("[%s] pid = %i\n", mon_nom(), mon_pid());
-    for (int32_t i = 0; i < 100000000; i++)
-      ;
-    ordonnance();
-  }
-}
-
-void proc1(void) {
-  for (;;) {
-    printf("[%s] pid = %i\n", mon_nom(), mon_pid());
-    for (int32_t i = 0; i < 100000000; i++)
-      ;
-    ordonnance();
-  }
-}
+#include "../kernel/func_test.h"
+#include "mem.h"
 
 void kernel_start(void)
 {
@@ -70,25 +37,27 @@ void kernel_start(void)
 	config_horloge();
 	
 	// démasquage des interruptions externes
-    sti();
+    //sti(); // Inutile avec l'ajout des processus dynamiques
 
 	/*************************/
 	/* Tests simples process */
 	/*************************/
 	// Initialisation du processus idle
-	processus_table[0].pid = 0;
-	processus_table[0].name = "idle";
-	processus_table[0].state = ELU;
+	processus_t* idle_process = mem_alloc(sizeof(processus_t));
+	idle_process->pid = 0;
+	idle_process->name = "idle";
+	idle_process->state = ELU;
+	idle_process->prio = 0;
 	// idle utilise directement la pile noyau, pas besoin d'initialiser regs
-	actif = &processus_table[0];
+	queue_add(idle_process, &queue_process, processus_t, link, prio);
 
-	// Initialisation du processus proc1
-	processus_table[1].pid = 1;
-	processus_table[1].name = "proc1";
-	processus_table[1].state = ACTIVABLE;
-	// Placer l'adresse de proc1 en sommet de pile et initialiser %esp
-	processus_table[1].stack[MAX_STACK_SIZE - 1] = (uint32_t)proc1;
-	processus_table[1].registers[1] = (uint32_t)&processus_table[1].stack[MAX_STACK_SIZE - 1];
+	cree_processus(proc1, "proc1");
+	cree_processus(proc2, "proc2");
+	cree_processus(proc3, "proc3");
+	cree_processus(proc4, "proc4");
+	cree_processus(proc5, "proc5");
+	cree_processus(proc6, "proc6");
+	cree_processus(proc7, "proc7");
 
 	// Démarrer le processus par défaut
 	idle();
