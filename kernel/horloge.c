@@ -83,3 +83,7 @@ void config_horloge(void)
     // démasquage de l'IRQ0 pour autoriser les signaux de l'horloge
     masque_IRQ(0, false);
 }
+
+int32_t nbr_secondes(void) {
+    return ticks / CLOCKFREQ;
+}
