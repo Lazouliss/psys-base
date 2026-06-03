@@ -1,6 +1,7 @@
 #include "horloge.h"
 #include "segment.h"
 #include "screen.h"
+#include "processus.h"
 
 uint32_t ticks = 0;    // to test : 183550 => 01:01:11
 
@@ -25,7 +26,12 @@ void tic_PIT(void)
     // increment ticks
     ticks++;
 
-    // Mise à jour à chaque seconde
+    // Changement de contexte
+    if (ticks % SCHEDFREQ == 0) {
+        ordonnance();
+    }
+
+    // Mise à jour de l'horloge à chaque seconde
     if (ticks % CLOCKFREQ == 0) {
         uint32_t total_seconds = ticks / CLOCKFREQ;
         uint32_t hours = (total_seconds / 3600) % 24;
