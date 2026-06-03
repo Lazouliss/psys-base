@@ -49,8 +49,7 @@ void kernel_start(void)
 	idle_process->state = ELU;
 	idle_process->prio = 0;
 	// idle utilise directement la pile noyau, pas besoin d'initialiser regs
-	actif = idle_process;
-	queue_add(idle_process, &queue_process_elu, processus_t, link, prio);
+	queue_add(idle_process, &queue_process, processus_t, link, prio);
 
 	cree_processus(proc1, "proc1");
 	cree_processus(proc2, "proc2");

@@ -21,12 +21,11 @@ typedef struct
     states state; // Process state (0: ready / activable, 1: running / élu, 2: sleeping / endormi)
     uint32_t registers[5]; // CPU registers (ebx, esp, ebp, esi, edi)
     uint32_t stack[MAX_STACK_SIZE]; // pile d'execution des processus
-    uint32_t prio; // priorité du processus (pour l'ordonnanceur)
+    int32_t prio; // priorité du processus (pour l'ordonnanceur)
     link link; // pointeur vers le processus suivant dans la liste des processus
 } processus_t;
 
-extern link queue_process_activable;
-extern link queue_process_elu;
+extern link queue_process;
 
 extern processus_t* actif;
 extern void ctx_sw(uint32_t* old_reg, uint32_t* new_reg); // Fonction context_switch en assembleur (ctx_sw.S)
@@ -36,5 +35,6 @@ char* mon_nom();
 void ordonnance(void);
 
 int32_t cree_processus(void (*code)(void), char *nom);
+void dors(uint32_t nbr_secs);
 
 #endif
