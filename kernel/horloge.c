@@ -25,9 +25,13 @@ void tic_PIT(void)
 
     // increment ticks
     ticks++;
-    ordonnance();
 
-    // Mise à jour à chaque seconde
+    // Changement de contexte
+    if (ticks % SCHEDFREQ == 0) {
+        ordonnance();
+    }
+
+    // Mise à jour de l'horloge à chaque seconde
     if (ticks % CLOCKFREQ == 0) {
         uint32_t total_seconds = ticks / CLOCKFREQ;
         uint32_t hours = (total_seconds / 3600) % 24;
