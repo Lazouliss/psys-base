@@ -9,9 +9,9 @@
 
 typedef enum
 {
-    ACTIVABLE = 0,
-    ELU = 1,
-    ENDORMI = 2
+    ACTIVABLE = 0,  // Le processus n'attend que la possession du processeur pour s'exécuter.
+    ELU = 1,        // Le processus est celui qui possède le processeur.
+    ENDORMI = 2     // Le processus a appelé wait_clock, la primitive de mise en sommeil jusqu'à une heure donnée.
 } states;
 
 typedef struct
@@ -37,7 +37,7 @@ char* mon_nom();
 void ordonnance(void);
 
 int32_t cree_processus(void (*code)(void), char *nom);
-void dors(uint32_t nbr_secs);
+void wait_clock(uint32_t nbr_secs);
 
 // Fonctions de debug
 void print_queue();

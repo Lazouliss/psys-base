@@ -105,7 +105,7 @@ int32_t cree_processus(void (*code)(void), char *nom) {
     return new_processus->pid;
 }
 
-void dors(uint32_t nbr_secs) {
+void wait_clock(uint32_t nbr_secs) {
     actif = queue_top(&queue_process, processus_t, link);
     if (!actif) {
         return; // Pas de processus actif
