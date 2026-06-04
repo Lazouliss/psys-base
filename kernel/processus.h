@@ -7,6 +7,7 @@
 #define MAX_STACK_SIZE 2048
 #define NBPROC 30
 #define DEFAULT_PRIO 128
+#define MAX_PRIO 255
 
 typedef enum
 {
@@ -42,6 +43,10 @@ extern void ctx_sw(uint32_t* old_reg, uint32_t* new_reg); // Fonction context_sw
 
 int32_t mon_pid();
 const char* mon_nom();
+int getprio(int pid);
+
+int chprio(int pid, int newprio);
+
 void ordonnance(void);
 
 int start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, int prio, const char* name, void *arg);

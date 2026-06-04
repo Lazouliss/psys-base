@@ -86,7 +86,29 @@ int32_t mon_pid() {
     return actif->pid;
 }
 
+int getprio(int pid){
+    if (pid < 0 || pid >= NBPROC || !processus_tab[pid] || processus_tab[pid]->state == ZOMBIE) {
+        return -1;
+    }
+    return processus_tab[pid]->prio;
+}
+
+int chprio(int pid, int newprio) {
+    if (newprio < 0 || newprio >= MAX_PRIO || 
+        pid < 0 || pid >= NBPROC || !processus_tab[pid] || processus_tab[pid]->state == ZOMBIE) {
+        return -1;
+    }
+    processus_tab[pid]->prio = newprio;
+    if (processus_tab[pid]->state == ACTIVABLE) {
+        // il doit y être replacé selon sa nouvelle priorité.
+        queue_del(processus_tab[pid], link);
+        queue_add(processus_tab[pid], &queue_process, processus_t, link, prio);
+    }
+    return 0;
+}
+
 int32_t start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, int prio, const char* name, void *arg) {
+    if (prio < 0 || prio >= MAX_PRIO) {return -1;}
     // Calcul du prochain PID disponible
     for (size_t i = 1; i < NBPROC; i++)
     {
@@ -99,6 +121,7 @@ int32_t start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, 
     
     processus_t* new_processus = mem_alloc(sizeof(processus_t));
     if (!new_processus) {return -1;}
+
     uint32_t stack_words = ssize_user / sizeof(uint32_t);
     uint32_t stack_size = stack_words > MAX_STACK_SIZE ? MAX_STACK_SIZE : stack_words;
 
