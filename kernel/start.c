@@ -42,6 +42,7 @@ void kernel_start(void)
 	/*************************/
 	/* Tests simples process */
 	/*************************/
+
 	// Initialisation du processus idle
 	processus_t* idle_process = mem_alloc(sizeof(processus_t));
 	idle_process->pid = 0;
@@ -50,15 +51,17 @@ void kernel_start(void)
 	idle_process->prio = 0;
 	// idle utilise directement la pile noyau, pas besoin d'initialiser regs
 	queue_add(idle_process, &queue_process, processus_t, link, prio);
+	actif = idle_process;
 
 	cree_processus(proc1, "proc1");
 	cree_processus(proc2, "proc2");
 	cree_processus(proc3, "proc3");
+	/*
 	cree_processus(proc4, "proc4");
 	cree_processus(proc5, "proc5");
 	cree_processus(proc6, "proc6");
 	cree_processus(proc7, "proc7");
-
+	*/
 	// Démarrer le processus par défaut
 	idle();
 	

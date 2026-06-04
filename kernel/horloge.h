@@ -20,5 +20,6 @@ void init_traitant_IT(int32_t num_IT, void (*traitant)(void));
 void masque_IRQ(uint32_t num_IRQ, bool masque);
 void config_horloge(void);
 void tic_PIT(void);
+int32_t nbr_secondes(void);
 
 #endif
