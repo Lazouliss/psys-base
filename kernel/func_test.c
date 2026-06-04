@@ -22,10 +22,16 @@ void idle() {
 }
 
 int proc1(void*) {
+  int count = 0;
   for (;;) {
     printf("[temps = %lu] processus %s pid = %i\n", current_clock(), mon_nom(),
            mon_pid());
     wait_clock(2);
+    count++;
+    if(count == 3) {
+      // Test de la fonction kill sur le processus 3
+      printf("Résultat du kill de 3 : %i\n", kill(3));
+    }
   }
   return 0;
 }

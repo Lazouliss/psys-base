@@ -29,6 +29,18 @@ void print_queue_sleeping() {
     }
 }
 
+int kill(int pid) {
+    if (pid < 0 || pid >= NBPROC || !processus_tab[pid]) {
+        return -1; // PID invalide ou processus déjà terminé
+    }
+    processus_t* proc = processus_tab[pid];
+
+    queue_del(proc, link); // Retirer le processus de sa queue actuelle
+    processus_tab[pid] = NULL; // Libère la case
+    return 0;
+}
+
+
 void ordonnance(void) {
     if (queue_empty(&queue_process)) {
         return; // Pas de processus activable, on reste sur le processus actuel
