@@ -23,7 +23,7 @@ void idle() {
 
 int proc1(void*) {
   for (;;) {
-    printf("[temps = %u] processus %s pid = %i\n", nbr_secondes(), mon_nom(),
+    printf("[temps = %lu] processus %s pid = %i\n", current_clock(), mon_nom(),
            mon_pid());
     wait_clock(2);
   }
@@ -32,7 +32,7 @@ int proc1(void*) {
 
 int proc2(void*) {
   for (;;) {
-    printf("[temps = %u] processus %s pid = %i\n", nbr_secondes(), mon_nom(),
+    printf("[temps = %lu] processus %s pid = %i\n", current_clock(), mon_nom(),
            mon_pid());
     wait_clock(3);
   }
@@ -41,7 +41,7 @@ int proc2(void*) {
 
 int proc3(void*) {
   for (;;) {
-    printf("[temps = %u] processus %s pid = %i\n", nbr_secondes(), mon_nom(),
+    printf("[temps = %lu] processus %s pid = %i\n", current_clock(), mon_nom(),
            mon_pid());
     wait_clock(5);
   }
@@ -50,7 +50,7 @@ int proc3(void*) {
 
 int proc4(void*) {
   for (;;) {
-    printf("[temps = %u] processus %s pid = %i\n", nbr_secondes(), mon_nom(),
+    printf("[temps = %lu] processus %s pid = %i\n", current_clock(), mon_nom(),
            mon_pid());
     wait_clock(8);
   }
@@ -59,7 +59,7 @@ int proc4(void*) {
 
 int proc5(void*) {
   for (;;) {
-    printf("[temps = %u] processus %s pid = %i\n", nbr_secondes(), mon_nom(),
+    printf("[temps = %lu] processus %s pid = %i\n", current_clock(), mon_nom(),
            mon_pid());
     wait_clock(13);
   }
@@ -68,7 +68,7 @@ int proc5(void*) {
 
 int proc6(void*) {
   for (;;) {
-    printf("[temps = %u] processus %s pid = %i\n", nbr_secondes(), mon_nom(),
+    printf("[temps = %lu] processus %s pid = %i\n", current_clock(), mon_nom(),
            mon_pid());
     wait_clock(21);
   }
@@ -77,7 +77,7 @@ int proc6(void*) {
 
 int proc7(void*) {
   for (;;) {
-    printf("[temps = %u] processus %s pid = %i\n", nbr_secondes(), mon_nom(),
+    printf("[temps = %lu] processus %s pid = %i\n", current_clock(), mon_nom(),
            mon_pid());
     wait_clock(34);
   }

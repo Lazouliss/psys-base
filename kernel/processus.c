@@ -39,7 +39,7 @@ void ordonnance(void) {
     while (!queue_empty(&queue_process_sleeping)) {
         proc = queue_top(&queue_process_sleeping, processus_t, link);
         assert(proc);
-        if (-(proc->time_to_wake) > nbr_secondes()) {
+        if ((long unsigned)(-(proc->time_to_wake)) > current_clock()) {
             break;
         }
 
@@ -137,6 +137,11 @@ int32_t start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, 
     queue_add(new_processus, &queue_process, processus_t, link, prio);
     processus_tab[new_processus->pid] = new_processus;
 
+    // Lorsqu'un nouveau processus a une prio > a celle du élu, on les switch
+    if(new_processus->prio > actif->prio) {
+        ordonnance();
+    }
+
     return new_processus->pid;
 }
 
@@ -146,7 +151,7 @@ void wait_clock(uint32_t nbr_secs) {
         return; // Pas de processus actif
     }
     actif->state = ENDORMI;
-    actif->time_to_wake = -(nbr_secs + nbr_secondes()); // temps de réveil = temps actuel + nombre de secondes à dormir
+    actif->time_to_wake = -(nbr_secs + current_clock()); // temps de réveil = temps actuel + nombre de secondes à dormir
 
     ordonnance(); // Appeler l'ordonnanceur pour switcher vers un autre processus pendant que celui-ci est endormi
 }

@@ -5,6 +5,11 @@
 
 uint32_t ticks = 0;    // to test : 183550 => 01:01:11
 
+void clock_settings(unsigned long quartz[static 1], unsigned long ticks[static 1]){
+    quartz[0] = QUARTZ;
+    ticks[0] = CLOCKFREQ;
+}
+
 void print_horloge(char* time_str)
 {
     // Calcul de la longueur de la chaîne (en général 8 pour "HH:MM:SS")
@@ -84,6 +89,6 @@ void config_horloge(void)
     masque_IRQ(0, false);
 }
 
-int32_t nbr_secondes(void) {
+unsigned long current_clock(void) {
     return ticks / CLOCKFREQ;
 }
