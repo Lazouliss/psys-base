@@ -7,6 +7,7 @@
 // initialisation de la table des processus
 link queue_process = LIST_HEAD_INIT(queue_process);
 link queue_process_sleeping = LIST_HEAD_INIT(queue_process_sleeping);
+link queue_process_zombie = LIST_HEAD_INIT(queue_process_zombie);
 
 processus_t* processus_tab[NBPROC];
 processus_t* actif;
@@ -41,22 +42,72 @@ int kill(int pid) {
     return 0;
 }
 
+void end_processus(int arg) {
+    exit(arg);
+}
+
+__attribute__((noreturn))
 void exit(int retval) {
     printf("Processus %u termine avec le code de retour %d.\n", actif->pid, retval);
+    // recuperer le processus top (courant), le marquer comme zombie, rendre la main, puis le supprimer
+    actif->state = ZOMBIE;
+    actif->retval = retval;
+
+    // débloque son pere et lui rend la main, s'il est en BLOCK_CHILD
+    // Sinon le fils est en ZOMBIE et regarde que son pere l'attend (parent->blocking_cid) pour lui mettre sa retval dans parent->retval, et finir par se suicider (mettre son parent ELU et se plonger dans la poubelle). (exit)
+    processus_t* parent = processus_tab[actif->p_pid];
+    if (parent && parent->state == BLOCK_CHILD && parent->blocking_cid == actif->pid) {
+        parent->state = ACTIVABLE;
+        parent->retval = retval;
+        actif->state = DYING;
+    }
+    ordonnance();
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wanalyzer-infinite-loop"    
         while(true);
 #pragma GCC diagnostic pop
-    /*
-    // recuperer le processus top (courant), le marquer comme zombie, rendre la main, puis le supprimer
-    uint32_t pid = actif->pid;
-    actif->state = ZOMBIE;
-    actif->prio = 0;
+}
 
-    ordonnance();
-    printf("Processus %u termine.\n", pid);
-    kill(pid);
-    */
+int waitpid(int pid, int *retvalp) {
+    if (queue_empty(&actif->children) || pid > NBPROC) { return -1;}
+
+    // regarde ses enfants, att qu'ils deviennent zombie, recupere leur valeur retval, les tue et retourne leur pid
+    if (pid < 0) {
+        processus_t* proc_iter;
+        queue_for_each(proc_iter, &actif->children , processus_t, siblings) {
+            if(proc_iter->state == ZOMBIE) {
+                if(retvalp) {
+                    *retvalp = proc_iter->retval;
+                }
+                int ret_kill = kill(proc_iter->pid);
+                assert(ret_kill == 0);
+                return proc_iter->pid;
+            }
+        }
+        //Si le fils n'est pas pret, le parent est blocké par le pid de son fils. 
+        actif->state = BLOCK_CHILD;
+        ordonnance(); // Attendre que l'un des processus enfants devienne zombie
+    } 
+
+    processus_t* child = processus_tab[pid];
+    if (!child || child->p_pid != actif->pid) {
+        return -1; // PID invalide ou processus non enfant
+    }
+    //Si le fils n'est pas pret, le parent est blocké par le pid de son fils. 
+    if (child->state != ZOMBIE) {
+        actif->state = BLOCK_CHILD;
+        actif->blocking_cid = pid;
+        ordonnance(); // Attendre que le processus enfant devienne zombie
+    }
+
+    //Dans le cas ou l'enfant est fini (ZOMBIE), mais que son parent n'est pas bloqué, alors il reste dans la queue_process_zombie, et sera nettoyé par son père lorsqu'il récupérera sa valeur ret.
+    if (!child->retval) { return -1; }
+    *retvalp = child->retval;
+
+    int ret_kill = kill(child->pid);
+    if (ret_kill != 0) { return -1; }
+
+    return pid;
 }
 
 void ordonnance(void) {
@@ -81,18 +132,33 @@ void ordonnance(void) {
         queue_add(proc, &queue_process, processus_t, link, prio);
     }
 
+    // Clean dying list, processus on fini leur boulot    
+    processus_t* proc_iter_zombie;
+    queue_for_each(proc_iter_zombie, &queue_process_zombie, processus_t, link) {
+        if(proc_iter_zombie->state == DYING) {
+            int ret_kill = kill(proc_iter_zombie->pid);
+            assert(ret_kill == 0);
+        }
+    }
+
     // récupère la tête uniquement lorsque que le processus est élu ou s'endort
     processus_t* proc_top = queue_top(&queue_process, processus_t, link);
     assert(proc_top);
-    if(proc_top->state == ELU || proc_top->state == ENDORMI) {
+
+    if (proc_top->state == ELU || proc_top->state == ENDORMI || proc_top->state == ZOMBIE || proc_top->state == DYING) {
         actif = queue_out(&queue_process, processus_t, link);
         if (!actif) {return;} // Pas de processus à switcher
         if (actif->state == ENDORMI) {
             queue_add(actif, &queue_process_sleeping, processus_t, link, time_to_wake);
+        } 
+        // Si le proc est ZOMBIE on doit le deplacer dans la liste des zombies
+        if (actif->state == ZOMBIE || actif->state == DYING) {
+            printf("Processus %u est dans la poubelle.\n", actif->pid);
+            queue_add(actif, &queue_process_zombie, processus_t, link, prio);
         } else {
             actif->state = ACTIVABLE;
             queue_add(actif, &queue_process, processus_t, link, prio);
-        }
+        } 
     } else {
         // cas où Idle doit passer à l'état ACTIVABLE et rendre la main
         actif->state = ACTIVABLE;
@@ -160,13 +226,14 @@ int32_t start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, 
     new_processus->state = ACTIVABLE;
     // Placer l'adresse de code en sommet de pile et initialiser %esp
     new_processus->stack[stack_size - 3] = (uint32_t)pt_func;
-    new_processus->stack[stack_size - 2] = (uint32_t)exit;
+    new_processus->stack[stack_size - 2] = (uint32_t)end_processus;
     new_processus->stack[stack_size - 1] = (uint32_t)arg;
     new_processus->registers[1] = (uint32_t)&new_processus->stack[stack_size - 3];
     new_processus->prio = prio;
     // Filiation
     new_processus->p_pid = actif->pid;
     INIT_LIST_HEAD(&new_processus->children);
+    // TODO : make our own queue obj
     queue_add(new_processus, &actif->children, processus_t, siblings, pid); // Ajouter le processus à la liste des enfants de son père
 
     // Ajouter le processus à la table + queue

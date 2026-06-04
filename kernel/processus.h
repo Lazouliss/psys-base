@@ -18,15 +18,18 @@ typedef enum
     BLOCK_SEM = 4,  // Le processus a exécuté une opération sur un sémaphore qui demande d'attendre pour progresser (par exemple wait).
     BLOCK_IO = 5,   // Le processus attend qu'une entrée/sortie soit réalisée.
     BLOCK_CHILD = 6,// Le processus attend qu'un de ses processus fils soit terminé.
-    ZOMBIE = 7      // Le processus a terminé son exécution ou a été terminé par l'appel système kill et son père est toujours vivant et n'a pas encore fait de waitpid sur lui.
+    ZOMBIE = 7,     // Le processus a terminé son exécution ou a été terminé par l'appel système kill et son père est toujours vivant et n'a pas encore fait de waitpid sur lui.
+    DYING = 8       // Le processus a terminé son exécution et il doit être nettoyé
 } states;
 
 typedef struct
 {   
     uint32_t pid;
     uint32_t p_pid;
+    uint32_t blocking_cid;
     int retval;
     
+
     const char* name;
     states state;                   // Process state (0: ready / activable, 1: running / élu, 2: sleeping / endormi)
     uint32_t registers[5];          // CPU registers (ebx, esp, ebp, esi, edi)
@@ -41,6 +44,7 @@ typedef struct
 
 extern link queue_process;
 extern link queue_process_sleeping;
+extern link queue_process_zombie;
 
 extern processus_t* processus_tab[NBPROC];
 
@@ -58,8 +62,10 @@ void ordonnance(void);
 int start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, int prio, const char* name, void *arg);
 void wait_clock(uint32_t nbr_secs);
 int kill(int pid);
+void end_processus(int arg);
 __attribute__((noreturn))
 void exit(int retval);
+int waitpid(int pid, int *retvalp);
 
 // Fonctions de debug
 void print_queue();
