@@ -35,11 +35,29 @@ int kill(int pid) {
     }
     processus_t* proc = processus_tab[pid];
 
+    mem_free(proc, sizeof(proc)); // Libère la mémoire du processus
     queue_del(proc, link); // Retirer le processus de sa queue actuelle
     processus_tab[pid] = NULL; // Libère la case
     return 0;
 }
 
+void exit(int retval) {
+    
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wanalyzer-BLA-BLA-BLA"    
+        while(true);
+#pragma GCC diagnostic pop
+    /*
+    // recuperer le processus top (courant), le marquer comme zombie, rendre la main, puis le supprimer
+    uint32_t pid = actif->pid;
+    actif->state = ZOMBIE;
+    actif->prio = 0;
+
+    ordonnance();
+    printf("Processus %u termine.\n", pid);
+    kill(pid);
+    */
+}
 
 void ordonnance(void) {
     if (queue_empty(&queue_process)) {
@@ -141,9 +159,10 @@ int32_t start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, 
     new_processus->name = name;
     new_processus->state = ACTIVABLE;
     // Placer l'adresse de code en sommet de pile et initialiser %esp
-    new_processus->stack[stack_size - 2] = (uint32_t)pt_func;
+    new_processus->stack[stack_size - 3] = (uint32_t)pt_func;
+    new_processus->stack[stack_size - 2] = (uint32_t)end_processus;
     new_processus->stack[stack_size - 1] = (uint32_t)arg;
-    new_processus->registers[1] = (uint32_t)&new_processus->stack[stack_size - 2];
+    new_processus->registers[1] = (uint32_t)&new_processus->stack[stack_size - 3];
     new_processus->prio = prio;
 
     queue_add(new_processus, &queue_process, processus_t, link, prio);

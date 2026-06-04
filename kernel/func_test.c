@@ -37,7 +37,7 @@ int proc1(void*) {
 }
 
 int proc2(void*) {
-  for (;;) {
+  for (int i = 0; i < 2; i++) {
     printf("[temps = %lu] processus %s pid = %i\n", current_clock(), mon_nom(),
            mon_pid());
     wait_clock(3);

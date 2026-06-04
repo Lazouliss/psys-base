@@ -52,6 +52,8 @@ void ordonnance(void);
 int start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, int prio, const char* name, void *arg);
 void wait_clock(uint32_t nbr_secs);
 int kill(int pid);
+__attribute__((noreturn))
+void exit(int retval);
 
 // Fonctions de debug
 void print_queue();
