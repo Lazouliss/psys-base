@@ -46,11 +46,15 @@ void kernel_start(void)
 	// Initialisation du processus idle
 	processus_t* idle_process = mem_alloc(sizeof(processus_t));
 	idle_process->pid = 0;
+	idle_process->p_pid = -1;
 	idle_process->name = "idle";
 	idle_process->state = ELU;
 	idle_process->prio = 0;
 	// idle utilise directement la pile noyau, pas besoin d'initialiser regs
 	queue_add(idle_process, &queue_process, processus_t, link, prio);
+	
+	INIT_LIST_HEAD(&idle_process->children);
+
 	actif = idle_process;
 	processus_tab[idle_process->pid] = idle_process;
 

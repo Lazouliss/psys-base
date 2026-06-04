@@ -42,9 +42,9 @@ int kill(int pid) {
 }
 
 void exit(int retval) {
-    
+    printf("Processus %u termine avec le code de retour %d.\n", actif->pid, retval);
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wanalyzer-BLA-BLA-BLA"    
+#pragma GCC diagnostic ignored "-Wanalyzer-infinite-loop"    
         while(true);
 #pragma GCC diagnostic pop
     /*
@@ -160,11 +160,16 @@ int32_t start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, 
     new_processus->state = ACTIVABLE;
     // Placer l'adresse de code en sommet de pile et initialiser %esp
     new_processus->stack[stack_size - 3] = (uint32_t)pt_func;
-    new_processus->stack[stack_size - 2] = (uint32_t)end_processus;
+    new_processus->stack[stack_size - 2] = (uint32_t)exit;
     new_processus->stack[stack_size - 1] = (uint32_t)arg;
     new_processus->registers[1] = (uint32_t)&new_processus->stack[stack_size - 3];
     new_processus->prio = prio;
+    // Filiation
+    new_processus->p_pid = actif->pid;
+    INIT_LIST_HEAD(&new_processus->children);
+    queue_add(new_processus, &actif->children, processus_t, siblings, pid); // Ajouter le processus à la liste des enfants de son père
 
+    // Ajouter le processus à la table + queue
     queue_add(new_processus, &queue_process, processus_t, link, prio);
     processus_tab[new_processus->pid] = new_processus;
 

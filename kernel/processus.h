@@ -24,13 +24,19 @@ typedef enum
 typedef struct
 {   
     uint32_t pid;
+    uint32_t p_pid;
+    int retval;
+    
     const char* name;
     states state;                   // Process state (0: ready / activable, 1: running / élu, 2: sleeping / endormi)
     uint32_t registers[5];          // CPU registers (ebx, esp, ebp, esi, edi)
     uint32_t stack[MAX_STACK_SIZE]; // pile d'execution des processus
     int32_t prio;                   // priorité du processus (pour l'ordonnanceur)
-    link link;                      // pointeur vers le processus suivant dans la liste des processus
     int32_t time_to_wake;           // nombre de secondes avant de se réveiller (pour les processus endormis)
+
+    link link;                      // pointeur vers le processus suivant dans la liste des processus
+    link children;                  // liste des processus fils
+    link siblings;                  // liste des processus freres
 } processus_t;
 
 extern link queue_process;
