@@ -53,15 +53,10 @@ void kernel_start(void)
 	queue_add(idle_process, &queue_process, processus_t, link, prio);
 	actif = idle_process;
 
-	cree_processus(proc1, "proc1");
-	cree_processus(proc2, "proc2");
-	cree_processus(proc3, "proc3");
-	/*
-	cree_processus(proc4, "proc4");
-	cree_processus(proc5, "proc5");
-	cree_processus(proc6, "proc6");
-	cree_processus(proc7, "proc7");
-	*/
+	start(proc1, MAX_STACK_SIZE, DEFAULT_PRIO, "proc1", NULL);
+	start(proc2, MAX_STACK_SIZE, DEFAULT_PRIO, "proc2", NULL);
+	start(proc3, MAX_STACK_SIZE, DEFAULT_PRIO, "proc3", NULL);
+
 	// Démarrer le processus par défaut
 	idle();
 	

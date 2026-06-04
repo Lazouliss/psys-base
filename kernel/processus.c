@@ -77,7 +77,7 @@ void ordonnance(void) {
     ctx_sw(old_actif->registers, new_actif->registers);
 }
 
-char* mon_nom() {
+const char* mon_nom() {
     return actif->name;
 }
 
@@ -85,20 +85,23 @@ int32_t mon_pid() {
     return actif->pid;
 }
 
-int32_t cree_processus(void (*code)(void), char *nom) {
+int32_t start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, int prio, const char* name, void *arg) {
     processus_t* new_processus = mem_alloc(sizeof(processus_t));
     if (!new_processus || last_pid >= MAX_PROCESSES) {
         return -1;
     }
+    uint32_t stack_words = ssize_user / sizeof(uint32_t);
+    uint32_t stack_size = stack_words > MAX_STACK_SIZE ? MAX_STACK_SIZE : stack_words;
 
     new_processus->pid = last_pid;
     last_pid++;
-    new_processus->name = nom;
+    new_processus->name = name;
     new_processus->state = ACTIVABLE;
     // Placer l'adresse de code en sommet de pile et initialiser %esp
-    new_processus->stack[MAX_STACK_SIZE - 1] = (uint32_t)code;
-    new_processus->registers[1] = (uint32_t)&new_processus->stack[MAX_STACK_SIZE - 1];
-    new_processus->prio = 128; // priorité par défaut
+    new_processus->stack[stack_size - 2] = (uint32_t)pt_func;
+    new_processus->stack[stack_size - 1] = (uint32_t)arg;
+    new_processus->registers[1] = (uint32_t)&new_processus->stack[stack_size - 2];
+    new_processus->prio = prio;
 
     queue_add(new_processus, &queue_process, processus_t, link, prio);
 

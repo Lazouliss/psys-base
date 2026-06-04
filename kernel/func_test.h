@@ -12,13 +12,14 @@
 int fact(int n);
 
 void idle(void);
-void proc1(void);
-void proc2(void);
-void proc3(void);
-void proc4(void);
-void proc5(void);
-void proc6(void);
-void proc7(void);
-void proc8(void);
+
+int proc1(void*);
+int proc2(void*);
+int proc3(void*);
+int proc4(void*);
+int proc5(void*);
+int proc6(void*);
+int proc7(void*);
+int proc8(void*);
 
 #endif
