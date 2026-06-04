@@ -1,4 +1,6 @@
 #include "func_test.h"
+#include "processus.h"
+#include "horloge.h"
 
 int fact(int n)
 {
@@ -11,90 +13,66 @@ int fact(int n)
 /**************************/
 /* Décla function process */
 /**************************/
-void idle(void) {
+void idle() {
   for (;;) {
-    printf("[%s] pid = %i\n", mon_nom(), mon_pid());
-    for (int32_t i = 0; i < 100 * 1000 * 1000; i++)
-      ;
-    sti();
-    hlt();
-    cli();
+    sti(); // usage de sti et cli avant la phase 5 (possible après)
+    hlt(); // autre exception possible: le code de vos tests
+    cli(); // JAMAIS de sti ou de cli dans le reste de votre kernel
   }
 }
 
 void proc1(void) {
   for (;;) {
-    printf("[%s] pid = %i\n", mon_nom(), mon_pid());
-    for (int32_t i = 0; i < 100 * 1000 * 1000; i++)
-      ;
-    sti();
-    hlt();
-    cli();
+    printf("[temps = %u] processus %s pid = %i\n", nbr_secondes(), mon_nom(),
+           mon_pid());
+    dors(2);
   }
 }
 
 void proc2(void) {
   for (;;) {
-    printf("[%s] pid = %i\n", mon_nom(), mon_pid());
-    for (int32_t i = 0; i < 100 * 1000 * 1000; i++)
-      ;
-    sti();
-    hlt();
-    cli();
+    printf("[temps = %u] processus %s pid = %i\n", nbr_secondes(), mon_nom(),
+           mon_pid());
+    dors(3);
   }
 }
 
 void proc3(void) {
   for (;;) {
-    printf("[%s] pid = %i\n", mon_nom(), mon_pid());
-    for (int32_t i = 0; i < 100 * 1000 * 1000; i++)
-      ;
-    sti();
-    hlt();
-    cli();
+    printf("[temps = %u] processus %s pid = %i\n", nbr_secondes(), mon_nom(),
+           mon_pid());
+    dors(5);
   }
 }
 
 void proc4(void) {
   for (;;) {
-    printf("[%s] pid = %i\n", mon_nom(), mon_pid());
-    for (int32_t i = 0; i < 100 * 1000 * 1000; i++)
-      ;
-    sti();
-    hlt();
-    cli();
+    printf("[temps = %u] processus %s pid = %i\n", nbr_secondes(), mon_nom(),
+           mon_pid());
+    dors(8);
   }
 }
 
 void proc5(void) {
   for (;;) {
-    printf("[%s] pid = %i\n", mon_nom(), mon_pid());
-    for (int32_t i = 0; i < 100 * 1000 * 1000; i++)
-      ;
-    sti();
-    hlt();
-    cli();
+    printf("[temps = %u] processus %s pid = %i\n", nbr_secondes(), mon_nom(),
+           mon_pid());
+    dors(13);
   }
 }
 
 void proc6(void) {
   for (;;) {
-    printf("[%s] pid = %i\n", mon_nom(), mon_pid());
-    for (int32_t i = 0; i < 100 * 1000 * 1000; i++)
-      ;
-    sti();
-    hlt();
-    cli();
+    printf("[temps = %u] processus %s pid = %i\n", nbr_secondes(), mon_nom(),
+           mon_pid());
+    dors(21);
   }
 }
 
 void proc7(void) {
   for (;;) {
-    printf("[%s] pid = %i\n", mon_nom(), mon_pid());
-    for (int32_t i = 0; i < 100 * 1000 * 1000; i++)
-      ;
-    sti();
-    hlt();
-    cli();
+    printf("[temps = %u] processus %s pid = %i\n", nbr_secondes(), mon_nom(),
+           mon_pid());
+    dors(34);
   }
 }
