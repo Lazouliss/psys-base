@@ -8,9 +8,10 @@
 link queue_process = LIST_HEAD_INIT(queue_process);
 link queue_process_sleeping = LIST_HEAD_INIT(queue_process_sleeping);
 
+processus_t* processus_tab[NBPROC];
 processus_t* actif;
 
-int32_t last_pid = 1;
+int32_t last_pid = 0;
 
 // used for debugging purposes
 void print_queue() {
@@ -86,15 +87,22 @@ int32_t mon_pid() {
 }
 
 int32_t start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, int prio, const char* name, void *arg) {
-    processus_t* new_processus = mem_alloc(sizeof(processus_t));
-    if (!new_processus || last_pid >= MAX_PROCESSES) {
-        return -1;
+    // Calcul du prochain PID disponible
+    for (size_t i = 1; i < NBPROC; i++)
+    {
+        // Ignorer le PID 0 réservé pour le processus idle    
+        if(processus_tab[(i+last_pid) % NBPROC] == NULL) {
+            last_pid = (i+last_pid) % NBPROC;
+            break;
+        }
     }
+    
+    processus_t* new_processus = mem_alloc(sizeof(processus_t));
+    if (!new_processus) {return -1;}
     uint32_t stack_words = ssize_user / sizeof(uint32_t);
     uint32_t stack_size = stack_words > MAX_STACK_SIZE ? MAX_STACK_SIZE : stack_words;
 
     new_processus->pid = last_pid;
-    last_pid++;
     new_processus->name = name;
     new_processus->state = ACTIVABLE;
     // Placer l'adresse de code en sommet de pile et initialiser %esp
@@ -104,6 +112,7 @@ int32_t start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, 
     new_processus->prio = prio;
 
     queue_add(new_processus, &queue_process, processus_t, link, prio);
+    processus_tab[new_processus->pid] = new_processus;
 
     return new_processus->pid;
 }

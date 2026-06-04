@@ -5,7 +5,7 @@
 #include "queue.h"
 
 #define MAX_STACK_SIZE 2048
-#define MAX_PROCESSES 8
+#define NBPROC 30
 #define DEFAULT_PRIO 128
 
 typedef enum
@@ -34,6 +34,8 @@ typedef struct
 
 extern link queue_process;
 extern link queue_process_sleeping;
+
+extern processus_t* processus_tab[NBPROC];
 
 extern processus_t* actif;
 extern void ctx_sw(uint32_t* old_reg, uint32_t* new_reg); // Fonction context_switch en assembleur (ctx_sw.S)
