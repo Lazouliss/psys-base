@@ -137,6 +137,11 @@ int32_t start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, 
     queue_add(new_processus, &queue_process, processus_t, link, prio);
     processus_tab[new_processus->pid] = new_processus;
 
+    // Lorsqu'un nouveau processus a une prio > a celle du élu, on les switch
+    if(new_processus->prio > actif->prio) {
+        ordonnance();
+    }
+
     return new_processus->pid;
 }
 
