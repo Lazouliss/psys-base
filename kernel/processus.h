@@ -11,7 +11,12 @@ typedef enum
 {
     ACTIVABLE = 0,  // Le processus n'attend que la possession du processeur pour s'exécuter.
     ELU = 1,        // Le processus est celui qui possède le processeur.
-    ENDORMI = 2     // Le processus a appelé wait_clock, la primitive de mise en sommeil jusqu'à une heure donnée.
+    ENDORMI = 2,    // Le processus a appelé wait_clock, la primitive de mise en sommeil jusqu'à une heure donnée.
+    BLOCK_MSG = 3,  // Le processus a exécuté une opération sur une file de message qui demande d'attendre pour progresser (par exemple preceive).
+    BLOCK_SEM = 4,  // Le processus a exécuté une opération sur un sémaphore qui demande d'attendre pour progresser (par exemple wait).
+    BLOCK_IO = 5,   // Le processus attend qu'une entrée/sortie soit réalisée.
+    BLOCK_CHILD = 6,// Le processus attend qu'un de ses processus fils soit terminé.
+    ZOMBIE = 7      // Le processus a terminé son exécution ou a été terminé par l'appel système kill et son père est toujours vivant et n'a pas encore fait de waitpid sur lui.
 } states;
 
 typedef struct
@@ -23,7 +28,7 @@ typedef struct
     uint32_t stack[MAX_STACK_SIZE]; // pile d'execution des processus
     int32_t prio;                   // priorité du processus (pour l'ordonnanceur)
     link link;                      // pointeur vers le processus suivant dans la liste des processus
-    int32_t time_to_wake;          // nombre de secondes avant de se réveiller (pour les processus endormis)
+    int32_t time_to_wake;           // nombre de secondes avant de se réveiller (pour les processus endormis)
 } processus_t;
 
 extern link queue_process;
