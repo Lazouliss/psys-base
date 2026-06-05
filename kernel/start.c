@@ -53,7 +53,7 @@ void kernel_start(void)
 	// idle utilise directement la pile noyau, pas besoin d'initialiser regs
 	queue_add(idle_process, &queue_process, processus_t, link, prio);
 	
-	INIT_LIST_HEAD(&idle_process->children);
+    simple_list_init(&idle_process->children);
 
 	actif = idle_process;
 	processus_tab[idle_process->pid] = idle_process;
@@ -61,6 +61,10 @@ void kernel_start(void)
 	start(proc1, MAX_STACK_SIZE, DEFAULT_PRIO, "proc1", NULL);
 	start(proc2, MAX_STACK_SIZE, DEFAULT_PRIO, "proc2", NULL);
 	start(proc3, MAX_STACK_SIZE, DEFAULT_PRIO, "proc3", NULL);
+	/*
+	*/
+	//start(proc4, MAX_STACK_SIZE, DEFAULT_PRIO, "proc4", NULL);
+	//start(proc6, MAX_STACK_SIZE, DEFAULT_PRIO, "proc6", NULL);
 
 	// Démarrer le processus par défaut
 	idle();
