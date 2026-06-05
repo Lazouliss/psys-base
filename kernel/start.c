@@ -1,6 +1,8 @@
 #include "../kernel/func_test.h"
 #include "mem.h"
 
+int test_run(int n);
+
 void kernel_start(void)
 {
 	int i;
@@ -42,7 +44,7 @@ void kernel_start(void)
 	/*************************/
 	/* Tests simples process */
 	/*************************/
-
+	
 	// Initialisation du processus idle
 	processus_t* idle_process = mem_alloc(sizeof(processus_t));
 	idle_process->pid = 0;
@@ -57,12 +59,18 @@ void kernel_start(void)
 
 	actif = idle_process;
 	processus_tab[idle_process->pid] = idle_process;
-
+	/*
 	start(proc1, MAX_STACK_SIZE, DEFAULT_PRIO, "proc1", NULL);
 	start(proc2, MAX_STACK_SIZE, DEFAULT_PRIO, "proc2", NULL);
 	start(proc3, MAX_STACK_SIZE, DEFAULT_PRIO, "proc3", NULL);
 	start(proc4, MAX_STACK_SIZE, DEFAULT_PRIO, "proc4", NULL);
 	start(proc6, MAX_STACK_SIZE, DEFAULT_PRIO, "proc6", NULL);
+	 */
+
+	/***************************/
+	/* Tests complexes process */
+	/***************************/
+	start((void*)test_run, MAX_STACK_SIZE, 128, "test_run", (void*)1);
 
 	// Démarrer le processus par défaut
 	idle();

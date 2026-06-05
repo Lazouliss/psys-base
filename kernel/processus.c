@@ -263,7 +263,7 @@ const char* mon_nom() {
     return actif->name;
 }
 
-int32_t mon_pid() {
+int32_t getpid() {
     return actif->pid;
 }
 
