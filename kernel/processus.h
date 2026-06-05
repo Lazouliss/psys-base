@@ -27,7 +27,7 @@ typedef struct processus
 {	
     uint32_t pid;
     uint32_t p_pid;
-    uint32_t blocking_cid;
+    int32_t blocking_cid;           // le pid de l'enfant ou -1 pour n'importe lequel
     int retval;
     
 
@@ -46,6 +46,7 @@ typedef struct processus
 extern link queue_process;
 extern link queue_process_sleeping;
 extern link queue_process_zombie;
+extern link queue_process_blocked;
 
 extern processus_t* processus_tab[NBPROC];
 
@@ -63,7 +64,6 @@ void ordonnance(void);
 int start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, int prio, const char* name, void *arg);
 void wait_clock(uint32_t nbr_secs);
 int kill(int pid);
-void end_processus(int arg);
 __attribute__((noreturn))
 void exit(int retval);
 int waitpid(int pid, int *retvalp);
@@ -73,5 +73,6 @@ void print_queues();
 void print_queue();
 void print_queue_sleeping();
 void print_queue_zombie();
+void print_queue_blocked();
 
 #endif
