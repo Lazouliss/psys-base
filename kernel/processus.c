@@ -15,6 +15,13 @@ processus_t* actif;
 int32_t last_pid = 0;
 
 // used for debugging purposes
+void print_queues() {
+    printf("=== Etat des queues de processus ===\n");
+    print_queue();
+    print_queue_sleeping();
+    print_queue_zombie();
+    printf("====================================\n");
+}
 void print_queue() {
     processus_t* proc_iter;
     printf("Queue des processus activables :\n");
@@ -29,15 +36,29 @@ void print_queue_sleeping() {
         printf("PID: %u, Name: %s, State: %u, Prio: %d, Time to wake: %d\n", proc_iter->pid, proc_iter->name, proc_iter->state, proc_iter->prio, proc_iter->time_to_wake);
     }
 }
+void print_queue_zombie() {
+    processus_t* proc_iter;
+    printf("Queue des processus zombies :\n");
+    queue_for_each(proc_iter, &queue_process_zombie, processus_t, link) {
+        printf("PID: %u, Name: %s, State: %u, Prio: %d, Time to wake: %d\n", proc_iter->pid, proc_iter->name, proc_iter->state, proc_iter->prio, proc_iter->time_to_wake);
+    }
+}
 
+/*
+* Supprime le processus identifié par pid de la table des processus et de toutes les queues, et libère sa mémoire.
+* 
+* int pid : PID du processus à supprimer
+* return : 0 si succès, -1 si échec (PID invalide ou processus déjà terminé)
+*/
 int kill(int pid) {
+    printf("Tentative de suppression du processus %u.\n", pid);
     if (pid < 0 || pid >= NBPROC || !processus_tab[pid]) {
         return -1; // PID invalide ou processus déjà terminé
     }
     processus_t* proc = processus_tab[pid];
 
-    mem_free(proc, sizeof(proc)); // Libère la mémoire du processus
     queue_del(proc, link); // Retirer le processus de sa queue actuelle
+    mem_free(proc, sizeof(processus_t)); // Libère la mémoire du processus
     processus_tab[pid] = NULL; // Libère la case
     return 0;
 }
@@ -46,6 +67,13 @@ void end_processus(int arg) {
     exit(arg);
 }
 
+/*
+* Termine le processus courant en lui assignant un code de retour, et effectue les opérations nécessaires 
+* pour le marquer comme terminé et permettre à son père de récupérer sa valeur de retour.
+* 
+* int retval : code de retour du processus, qui sera récupéré par le père lors d'un appel à waitpid
+* return : ne retourne jamais, le processus se termine et est nettoyé par son père ou par l'ordonnanceur
+*/
 __attribute__((noreturn))
 void exit(int retval) {
     printf("Processus %u termine avec le code de retour %d.\n", actif->pid, retval);
@@ -68,13 +96,20 @@ void exit(int retval) {
 #pragma GCC diagnostic pop
 }
 
+/*
+* Permet à un processus père d'attendre la fin d'un de ses processus fils, de récupérer sa valeur de retour, et de libérer les ressources associées à ce processus fils.
+* 
+* int pid : PID du processus fils à attendre, ou -1 pour attendre n'importe quel processus fils
+* int *retvalp : pointeur vers une variable où sera stockée la valeur de retour du processus fils terminé
+* return : PID du processus fils terminé, ou -1 en cas d'erreur (PID invalide, processus fils non enfant, ou aucun processus fils n'est encore terminé)
+*/
 int waitpid(int pid, int *retvalp) {
-    if (queue_empty(&actif->children) || pid > NBPROC) { return -1;}
+    if (simple_list_empty(actif->children) || pid > NBPROC) { return -1;}
 
     // regarde ses enfants, att qu'ils deviennent zombie, recupere leur valeur retval, les tue et retourne leur pid
     if (pid < 0) {
         processus_t* proc_iter;
-        queue_for_each(proc_iter, &actif->children , processus_t, siblings) {
+        simple_list_for_each(proc_iter, actif->children, processus_t, siblings) {
             if(proc_iter->state == ZOMBIE) {
                 if(retvalp) {
                     *retvalp = proc_iter->retval;
@@ -98,6 +133,7 @@ int waitpid(int pid, int *retvalp) {
         actif->state = BLOCK_CHILD;
         actif->blocking_cid = pid;
         ordonnance(); // Attendre que le processus enfant devienne zombie
+        return -1;
     }
 
     //Dans le cas ou l'enfant est fini (ZOMBIE), mais que son parent n'est pas bloqué, alors il reste dans la queue_process_zombie, et sera nettoyé par son père lorsqu'il récupérera sa valeur ret.
@@ -110,6 +146,11 @@ int waitpid(int pid, int *retvalp) {
     return pid;
 }
 
+/* 
+* L'ordonnanceur est responsable de la gestion des processus, en décidant quel processus doit être exécuté à un moment donné.
+* Il gère les transitions d'état des processus (activable, élu, endormi, bloqué, zombie, etc.) et effectue les changements de contexte nécessaires pour passer d'un processus à un autre.
+* Termine par un changement de contexte (ctx_sw)
+*/
 void ordonnance(void) {
     if (queue_empty(&queue_process)) {
         return; // Pas de processus activable, on reste sur le processus actuel
@@ -148,17 +189,21 @@ void ordonnance(void) {
     if (proc_top->state == ELU || proc_top->state == ENDORMI || proc_top->state == ZOMBIE || proc_top->state == DYING) {
         actif = queue_out(&queue_process, processus_t, link);
         if (!actif) {return;} // Pas de processus à switcher
-        if (actif->state == ENDORMI) {
-            queue_add(actif, &queue_process_sleeping, processus_t, link, time_to_wake);
-        } 
-        // Si le proc est ZOMBIE on doit le deplacer dans la liste des zombies
-        if (actif->state == ZOMBIE || actif->state == DYING) {
-            printf("Processus %u est dans la poubelle.\n", actif->pid);
-            queue_add(actif, &queue_process_zombie, processus_t, link, prio);
-        } else {
-            actif->state = ACTIVABLE;
-            queue_add(actif, &queue_process, processus_t, link, prio);
-        } 
+        switch(actif->state) {
+            case ENDORMI:
+                queue_add(actif, &queue_process_sleeping, processus_t, link, time_to_wake);
+                break; // On garde le processus endormi dans la queue des processus endormis
+            case ZOMBIE:
+            case DYING:
+                // Si le proc est ZOMBIE on doit le deplacer dans la liste des zombies
+                printf("Processus %u est dans la poubelle.\n", actif->pid);
+                queue_add(actif, &queue_process_zombie, processus_t, link, prio);
+                break;
+            default:
+                // Cas ELU ou autre, on le remet dans la queue des processus en ACTIVABLE
+                actif->state = ACTIVABLE;
+                queue_add(actif, &queue_process, processus_t, link, prio);
+        }
     } else {
         // cas où Idle doit passer à l'état ACTIVABLE et rendre la main
         actif->state = ACTIVABLE;
@@ -203,6 +248,16 @@ int chprio(int pid, int newprio) {
     return 0;
 }
 
+/*
+* Crée un nouveau processus et le démarre si sa priorité est supérieure à celle du processus actif.
+* 
+* int (*pt_func)(void*) : pointeur vers la fonction à exécuter dans le processus, qui doit prendre un argument de type void* et retourner un int
+* unsigned long ssize_user : taille de la pile utilisateur à allouer pour le processus, en octets
+* int prio : priorité du processus, un entier entre 0 (priorité la plus basse) et MAX_PRIO (priorité la plus haute)
+* const char* name : nom du processus, une chaîne de caractères pour l'identification et le débogage
+* void *arg : argument à passer à la fonction pt_func lors de son exécution
+* return : PID du processus créé, ou -1 en cas d'erreur (par exemple, si la table des processus est pleine ou si les paramètres sont invalides)
+*/
 int32_t start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, int prio, const char* name, void *arg) {
     if (prio < 0 || prio >= MAX_PRIO) {return -1;}
     // Calcul du prochain PID disponible
@@ -232,9 +287,8 @@ int32_t start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, 
     new_processus->prio = prio;
     // Filiation
     new_processus->p_pid = actif->pid;
-    INIT_LIST_HEAD(&new_processus->children);
-    // TODO : make our own queue obj
-    queue_add(new_processus, &actif->children, processus_t, siblings, pid); // Ajouter le processus à la liste des enfants de son père
+    simple_list_init(&new_processus->children);
+    simple_list_add(new_processus, &actif->children, processus_t, siblings); // Ajouter le processus à la liste des enfants de son père
 
     // Ajouter le processus à la table + queue
     queue_add(new_processus, &queue_process, processus_t, link, prio);
@@ -248,6 +302,13 @@ int32_t start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, 
     return new_processus->pid;
 }
 
+/*
+* TODO: mettre à jour pour suivre la SPEC -> s'arrêter au bout de nbr_secs secondes depuis le lancement du programme, et pas depuis l'appel à wait_clock
+* Permet au processus actif de se mettre en sommeil pendant un certain nombre de secondes.
+* 
+* uint32_t nbr_secs : nombre de secondes pendant lesquelles le processus doit être endormi
+* return : ne retourne rien, le processus se met en sommeil et rend la main à l'ordonnanceur
+*/
 void wait_clock(uint32_t nbr_secs) {
     actif = queue_top(&queue_process, processus_t, link);
     if (!actif) {

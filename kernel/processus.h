@@ -3,6 +3,7 @@
 
 #include "stdint.h"
 #include "queue.h"
+#include "linked_list.h"
 
 #define MAX_STACK_SIZE 2048
 #define NBPROC 30
@@ -22,8 +23,8 @@ typedef enum
     DYING = 8       // Le processus a terminé son exécution et il doit être nettoyé
 } states;
 
-typedef struct
-{   
+typedef struct processus
+{	
     uint32_t pid;
     uint32_t p_pid;
     uint32_t blocking_cid;
@@ -38,8 +39,8 @@ typedef struct
     int32_t time_to_wake;           // nombre de secondes avant de se réveiller (pour les processus endormis)
 
     link link;                      // pointeur vers le processus suivant dans la liste des processus
-    link children;                  // liste des processus fils
-    link siblings;                  // liste des processus freres
+    struct processus* children;     // liste des processus fils (simple linked list)
+    simple_link siblings;           // pointeur vers le processus frere suivant
 } processus_t;
 
 extern link queue_process;
@@ -68,7 +69,9 @@ void exit(int retval);
 int waitpid(int pid, int *retvalp);
 
 // Fonctions de debug
+void print_queues();
 void print_queue();
 void print_queue_sleeping();
+void print_queue_zombie();
 
 #endif
