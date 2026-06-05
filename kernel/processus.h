@@ -3,6 +3,7 @@
 
 #include "stdint.h"
 #include "queue.h"
+#include "linked_list.h"
 
 #define MAX_STACK_SIZE 2048
 #define NBPROC 30
@@ -18,23 +19,34 @@ typedef enum
     BLOCK_SEM = 4,  // Le processus a exécuté une opération sur un sémaphore qui demande d'attendre pour progresser (par exemple wait).
     BLOCK_IO = 5,   // Le processus attend qu'une entrée/sortie soit réalisée.
     BLOCK_CHILD = 6,// Le processus attend qu'un de ses processus fils soit terminé.
-    ZOMBIE = 7      // Le processus a terminé son exécution ou a été terminé par l'appel système kill et son père est toujours vivant et n'a pas encore fait de waitpid sur lui.
+    ZOMBIE = 7,     // Le processus a terminé son exécution ou a été terminé par l'appel système kill et son père est toujours vivant et n'a pas encore fait de waitpid sur lui.
+    DYING = 8       // Le processus a terminé son exécution et il doit être nettoyé
 } states;
 
-typedef struct
-{   
+typedef struct processus
+{	
     uint32_t pid;
+    uint32_t p_pid;
+    int32_t blocking_cid;           // le pid de l'enfant ou -1 pour n'importe lequel
+    int retval;
+    
+
     const char* name;
     states state;                   // Process state (0: ready / activable, 1: running / élu, 2: sleeping / endormi)
     uint32_t registers[5];          // CPU registers (ebx, esp, ebp, esi, edi)
     uint32_t stack[MAX_STACK_SIZE]; // pile d'execution des processus
     int32_t prio;                   // priorité du processus (pour l'ordonnanceur)
-    link link;                      // pointeur vers le processus suivant dans la liste des processus
     int32_t time_to_wake;           // nombre de secondes avant de se réveiller (pour les processus endormis)
+
+    link link;                      // pointeur vers le processus suivant dans la liste des processus
+    struct processus* children;     // liste des processus fils (simple linked list)
+    simple_link siblings;           // pointeur vers le processus frere suivant
 } processus_t;
 
 extern link queue_process;
 extern link queue_process_sleeping;
+extern link queue_process_zombie;
+extern link queue_process_blocked;
 
 extern processus_t* processus_tab[NBPROC];
 
@@ -51,9 +63,16 @@ void ordonnance(void);
 
 int start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, int prio, const char* name, void *arg);
 void wait_clock(uint32_t nbr_secs);
+int kill(int pid);
+__attribute__((noreturn))
+void exit(int retval);
+int waitpid(int pid, int *retvalp);
 
 // Fonctions de debug
+void print_queues();
 void print_queue();
 void print_queue_sleeping();
+void print_queue_zombie();
+void print_queue_blocked();
 
 #endif
