@@ -2689,7 +2689,7 @@ static struct {
 	{"6", test6},
 	{"7", test7},
 	{"8", test8},
-	// {"9", test9},
+	{"9", test9},
 	// {"10", test10},
 	// {"11", test11},
 	// {"12", test12},
