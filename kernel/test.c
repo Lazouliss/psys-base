@@ -931,7 +931,7 @@ test1(void)
 	pid1 = start(dummy1_2, 4000, 100, "paramRetour", (void *) (DUMMY_VAL + 1));
 	assert(pid1 > 0);
 	printf(" 4");
-	r = waitpid(pid1, &rval);
+	r = waitpid(pid1, &rval); //TODO: waitpid() de fils pas encore termine
 	assert(r == pid1);
 	assert(rval == 4);
 	printf(" 6.\n");

@@ -70,11 +70,14 @@ void kernel_start(void)
 	/***************************/
 	/* Tests complexes process */
 	/***************************/
-	start((void*)test_run, MAX_STACK_SIZE, 128, "test_run", (void*)1);
+	for (int i = 1; i <= 8; i++) {
+		printf("Test %d : ", i);
+		start((void*)test_run, MAX_STACK_SIZE, 128, "test_run", (void*)i);
+	}
 
 	// Démarrer le processus par défaut
 	idle();
-	
+
 	while(1)
 	  hlt();
 

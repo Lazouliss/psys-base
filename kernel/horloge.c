@@ -24,7 +24,7 @@ void print_horloge(char* time_str)
     }
 }
 
-void tic_PIT(void) 
+void tic_PIT(void)
 {
     outb(0x20, 0x20);
 
@@ -42,7 +42,7 @@ void tic_PIT(void)
         uint32_t hours = (total_seconds / 3600) % 24;
         uint32_t minutes = (total_seconds / 60) % 60;
         uint32_t seconds = total_seconds % 60;
-        
+
         char time_str[9];
         sprintf(time_str, "%02d:%02d:%02d", hours, minutes, seconds);
         print_horloge(time_str);
