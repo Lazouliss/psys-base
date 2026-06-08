@@ -248,17 +248,10 @@ int waitpid(int pid, int *retvalp) {
     return pid;
 }
 
-/*
-* L'ordonnanceur est responsable de la gestion des processus, en décidant quel processus doit être exécuté à un moment donné.
-* Il gère les transitions d'état des processus (activable, élu, endormi, bloqué, zombie, etc.) et effectue les changements de contexte nécessaires pour passer d'un processus à un autre.
-* Termine par un changement de contexte (ctx_sw)
-*/
-void ordonnance(void) {
-    if (queue_empty(&queue_process)) {
-        return; // Pas de processus activable, on reste sur le processus actuel
-    }
-
-    // on réveille tout processus endormi dont le temps de réveil est atteint
+/**
+ * Réveille les processus dont le time_to_wake a été dépassé.
+ */
+void wake_up_processes() {
     processus_t* proc;
     while (!queue_empty(&queue_process_sleeping)) {
         proc = queue_top(&queue_process_sleeping, processus_t, link);
@@ -274,9 +267,13 @@ void ordonnance(void) {
 
         queue_add(proc, &queue_process, processus_t, link, prio);
     }
+}
 
-    // Clean dying list, les processus ont fini leur boulot
-    // On libère quand même les orphelins DYING dont le père est mort
+/**
+ * On libère les processus qui ont fini leur boulot
+ * On libère aussi les orphelins DYING dont le père est mort
+ */
+void clean_zombie_processes() {
     processus_t* proc_iter_zombie;
     processus_t* proc_next_zombie;
     queue_for_each(proc_iter_zombie, &queue_process_zombie, processus_t, link) {
@@ -306,8 +303,12 @@ void ordonnance(void) {
             }
         }
     }
+}
 
-    // Liberer les processus bloqués
+/**
+ * Libère les processus bloqués
+ */
+void unblock_processes() {
     processus_t* proc_iter_blocked;
     processus_t* proc_next_blocked;
     queue_for_each(proc_iter_blocked, &queue_process_blocked, processus_t, link) {
@@ -322,6 +323,26 @@ void ordonnance(void) {
             proc_iter_blocked = proc_next_blocked;
         }
     }
+}
+
+/*
+* L'ordonnanceur est responsable de la gestion des processus, en décidant quel processus doit être exécuté à un moment donné.
+* Il gère les transitions d'état des processus (activable, élu, endormi, bloqué, zombie, etc.) et effectue les changements de contexte nécessaires pour passer d'un processus à un autre.
+* Termine par un changement de contexte (ctx_sw)
+*/
+void ordonnance(void) {
+    if (queue_empty(&queue_process)) {
+        return; // Pas de processus activable, on reste sur le processus actuel
+    }
+
+    // on réveille tout processus endormi dont le temps de réveil est atteint
+    wake_up_processes();
+
+    // Clean dying list
+    clean_zombie_processes();
+
+    // Libere les processus bloqués
+    unblock_processes();
 
     // récupère la tête uniquement lorsque que le processus est élu ou s'endort
     processus_t* proc_top = queue_top(&queue_process, processus_t, link);
