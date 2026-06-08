@@ -2,6 +2,8 @@
 #include "processus.h"
 #include "horloge.h"
 
+int test_run(int n);
+
 int fact(int n)
 {
 	if (n < 2)
@@ -19,6 +21,17 @@ void idle() {
     hlt(); // autre exception possible: le code de vos tests
     cli(); // JAMAIS de sti ou de cli dans le reste de votre kernel
   }
+}
+
+int run_test_proc(int max_test) {
+  int first_test = 1;
+
+	for (int i = first_test; i <= max_test; i++) {
+		printf("Test %d : ", i);
+		test_run(i);
+	}
+
+  return 0;
 }
 
 int proc1(void*) {

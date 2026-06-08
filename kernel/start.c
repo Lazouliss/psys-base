@@ -1,8 +1,6 @@
 #include "../kernel/func_test.h"
 #include "mem.h"
 
-int test_run(int n);
-
 void kernel_start(void)
 {
 	int i;
@@ -69,15 +67,7 @@ void kernel_start(void)
 	/***************************/
 	/* Tests complexes process */
 	/***************************/
-	int first_test = 8;
-	int max_test = 8;
-
-	char test_name[32];
-	for (int i = first_test; i <= max_test; i++) {
-		printf("Test %d : ", i);
-		snprintf(test_name, sizeof(test_name), "test_run_%d", i);
-		start((void*)test_run, MAX_STACK_SIZE, 128, test_name, (void*)i);
-	}
+	start((void*)run_test_proc, MAX_STACK_SIZE, 128, "test_run", (void*)i);
 
 	// Démarrer le processus par défaut
 	idle();
