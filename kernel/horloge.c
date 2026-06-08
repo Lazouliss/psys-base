@@ -7,7 +7,7 @@ uint32_t ticks = 0;    // to test : 183550 => 01:01:11
 
 void clock_settings(unsigned long quartz[static 1], unsigned long ticks[static 1]){
     quartz[0] = QUARTZ;
-    ticks[0] = CLOCKFREQ;
+    ticks[0] = QUARTZ/CLOCKFREQ;
 }
 
 void print_horloge(char* time_str)
@@ -67,7 +67,7 @@ void masque_IRQ(uint32_t num_IRQ, bool masque)
     if (masque)
         mask |= (uint8_t)(1u << num_IRQ);
     else
-        mask &= (uint8_t)(0u << num_IRQ);      // (uint8_t)~(1u << num_IRQ);
+        mask &= (uint8_t)~(1u << num_IRQ);
     // envoyer le masque sur le port de données 0x21
     outb(mask, 0x21);
 }
@@ -90,5 +90,5 @@ void config_horloge(void)
 }
 
 unsigned long current_clock(void) {
-    return ticks / CLOCKFREQ;
+    return ticks;
 }

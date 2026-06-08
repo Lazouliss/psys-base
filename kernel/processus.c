@@ -423,19 +423,20 @@ int32_t start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, 
 }
 
 /*
-* TODO: mettre à jour pour suivre la SPEC -> s'arrêter au bout de nbr_secs secondes depuis le lancement du programme, et pas depuis l'appel à wait_clock
-* Permet au processus actif de se mettre en sommeil pendant un certain nombre de secondes.
+* Permet au processus actif de se mettre en sommeil jusqu'à un certains nombre de ticks depuis le démarrage du noyau.
 *
-* uint32_t nbr_secs : nombre de secondes pendant lesquelles le processus doit être endormi
+* uint32_t date_tick : nombre de secondes pendant lesquelles le processus doit être endormi
 * return : ne retourne rien, le processus se met en sommeil et rend la main à l'ordonnanceur
 */
-void wait_clock(uint32_t nbr_secs) {
-    actif = queue_top(&queue_process, processus_t, link);
+void wait_clock(uint32_t date_tick) {
     if (!actif) {
         return; // Pas de processus actif
     }
+    if(date_tick < current_clock()) {
+        return; // Date de réveil déjà passée
+    }
     actif->state = ENDORMI;
-    actif->time_to_wake = -(nbr_secs); // temps de réveil inversé (tri croissant)
+    actif->time_to_wake = -(date_tick); // temps de réveil inversé (tri croissant)
 
     ordonnance(); // Appeler l'ordonnanceur pour switcher vers un autre processus pendant que celui-ci est endormi
 }
