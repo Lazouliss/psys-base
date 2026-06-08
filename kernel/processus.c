@@ -65,6 +65,25 @@ static void free_process(processus_t* proc) {
     if (pid != 0 && processus_tab[proc->p_pid]) {
         simple_list_remove(proc, &processus_tab[proc->p_pid]->children, processus_t, siblings);
     }
+    // Lorsqu'un parent meurt, il laisse ses enfants activables orphelins, et supprime les zombies/dying qui lui restent
+    processus_t* child;
+    processus_t* next_child;
+    simple_list_for_each(child, proc->children, processus_t, siblings) {
+        if (child->state == ZOMBIE || child->state == DYING) {
+            // On calcul le next seulement s'il existe
+            if (child->link.next != NULL) {
+                next_child = list_entry(child->link.next, processus_t, siblings);
+            }
+            queue_del(child, link);
+            free_process(child);
+            if (child->link.next != NULL) {
+                child = next_child;
+            }
+        } else {
+            child->p_pid = 0; // orphelin
+        }
+    }
+
     processus_tab[pid] = NULL;
     mem_free(proc, sizeof(processus_t));
 }
@@ -86,11 +105,18 @@ int kill(int pid) {
         return -1;
     }
     proc->retval = 0; // retval d'un processus tué est 0
-    // Retirer de sa queue courante
-    queue_del(proc, link);
     proc->state = ZOMBIE;
-    // Placer dans la queue des zombies
-    queue_add(proc, &queue_process_zombie, processus_t, link, prio);
+
+    if(actif->pid == (uint32_t)pid) {
+        // Gestion du suicide
+        ordonnance(); // Si on tue le processus actif, on doit rendre la main
+    } else {
+        // Retirer de sa queue courante s'il n'est pas élu, sinon c'est ordonnance qui traite le cas
+        queue_del(proc, link);
+        // Placer dans la queue des zombies
+        queue_add(proc, &queue_process_zombie, processus_t, link, prio);
+    }
+
     return 0;
 }
 
@@ -255,6 +281,18 @@ void ordonnance(void) {
     processus_t* proc_next_zombie;
     queue_for_each(proc_iter_zombie, &queue_process_zombie, processus_t, link) {
         //printf("ZOMBIE : proc %s avec un state : %i\n", proc_iter_zombie->name, proc_iter_zombie->state);
+
+        // TODO: si son père process_tab[ppid] est mort, on le libère directement, sinon on attend que son père fasse waitpid pour le libérer
+        if(processus_tab[proc_iter_zombie->p_pid] == NULL) {
+            // Manuellement passer au next link du proc_iter_zombie avant de le supprimer, sinon on perd la référence à la queue et on ne peut plus itérer
+            proc_next_zombie = queue_entry(proc_iter_zombie->link.next, processus_t, link);
+
+            queue_del(proc_iter_zombie, link);
+            free_process(proc_iter_zombie);
+
+            proc_iter_zombie = proc_next_zombie;
+        }
+
         if(proc_iter_zombie->state == DYING) {
             int ppid = proc_iter_zombie->p_pid;
             if (!processus_tab[ppid] || ppid == 0) {
@@ -341,6 +379,13 @@ int getprio(int pid){
     return processus_tab[pid]->prio;
 }
 
+/*
+* Change la priorité d'un processus identifié par pid, et réordonne les processus si nécessaire.
+*
+* int pid : PID du processus dont on veut changer la priorité
+* int newprio : nouvelle priorité à assigner au processus, un entier entre 0 et MAX_PRIO
+* return : ancienne priorité du processus, ou -1 en cas d'erreur (PID invalide, pid==0, processus zombie/dying, ou nouvelle priorité invalide)
+*/
 int chprio(int pid, int newprio) {
     if (newprio <= 0 || newprio >= MAX_PRIO ||
         pid < 0 || pid >= NBPROC || !processus_tab[pid] ||

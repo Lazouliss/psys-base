@@ -10,7 +10,6 @@ void kernel_start(void)
 	i = 10;
 	i = fact(i);
 
-
 	/************************/
 	/* Tests simples printf */
 	/************************/
@@ -37,14 +36,14 @@ void kernel_start(void)
 	/*************************/
 	//print_horloge("12:34:56");
 	config_horloge();
-	
+
 	// démasquage des interruptions externes
     //sti(); // Inutile avec l'ajout des processus dynamiques
 
 	/*************************/
 	/* Tests simples process */
 	/*************************/
-	
+
 	// Initialisation du processus idle
 	processus_t* idle_process = mem_alloc(sizeof(processus_t));
 	idle_process->pid = 0;
@@ -54,7 +53,7 @@ void kernel_start(void)
 	idle_process->prio = 0;
 	// idle utilise directement la pile noyau, pas besoin d'initialiser regs
 	queue_add(idle_process, &queue_process, processus_t, link, prio);
-	
+
     simple_list_init(&idle_process->children);
 
 	actif = idle_process;
@@ -70,9 +69,14 @@ void kernel_start(void)
 	/***************************/
 	/* Tests complexes process */
 	/***************************/
-	for (int i = 1; i <= 8; i++) {
+	int first_test = 8;
+	int max_test = 8;
+
+	char test_name[32];
+	for (int i = first_test; i <= max_test; i++) {
 		printf("Test %d : ", i);
-		start((void*)test_run, MAX_STACK_SIZE, 128, "test_run", (void*)i);
+		snprintf(test_name, sizeof(test_name), "test_run_%d", i);
+		start((void*)test_run, MAX_STACK_SIZE, 128, test_name, (void*)i);
 	}
 
 	// Démarrer le processus par défaut

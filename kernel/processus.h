@@ -24,12 +24,11 @@ typedef enum
 } states;
 
 typedef struct processus
-{	
+{
     uint32_t pid;
     uint32_t p_pid;
     int32_t blocking_cid;           // le pid de l'enfant ou -1 pour n'importe lequel
     int retval;
-    
 
     const char* name;
     states state;                   // Process state (0: ready / activable, 1: running / élu, 2: sleeping / endormi)
