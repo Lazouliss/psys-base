@@ -122,3 +122,9 @@ void console_putbytes(const char *chaine, int taille)
         }
     }
 }
+
+void cons_write( unsigned long const size, const char str[static size])
+{
+	console_putbytes(str, size);
+}
+

@@ -43,6 +43,17 @@ typedef struct simple_link {
 	} while (0)
 
 /**
+ * Récupération du pointeur vers l'objet correspondant
+ *   (On calcule la différence entre l'adresse d'un élément et l'adresse
+ *   de son champ de type 'link' contenant les liens de chainage)
+ * ptr_link  : pointeur vers le maillon
+ * type      : type de l'élément à récupérer
+ * listfield : nom du champ du lien de chainage
+ */
+#define list_entry(ptr_link, type, listfield) \
+	((type *)((char *)(ptr_link)-(unsigned long)(&((type *)0)->listfield)))
+
+/**
  * Parcourir une liste
  * ptr_elem  : pointeur utilisé comme itérateur de boucle
  * head      : tête de liste (pointeur vers le premier élément)
