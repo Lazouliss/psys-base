@@ -210,6 +210,10 @@ int pdelete(int fid) {
     // pdelete détruit la file de messages identifiée par fid et fait passer dans l'état activable, ou actif, tous les processus, s'il en existe, qui se trouvaient bloqués sur la file. 
     unblock_file_process(m->sender_queue);
     unblock_file_process(m->receiver_queue);
+
+    mem_free(m, sizeof(message_t));
+
+    message_tab[fid] = NULL;
     
     ordonnance();
     
@@ -219,5 +223,34 @@ int pdelete(int fid) {
 // TODO:
 int pcount(int fid, int count[static 1]) {return fid + count[0];}
 
-// TODO:
-int preset(int fid) {return fid;}
+/**
+ * Vide la file identifiée par la valeur de fid et fait passer dans l'état activable ou actif (selon les priorités) tous les processus, s'il en existe, se trouvant dans l'état bloqué sur file pleine ou dans l'état bloqué sur file vide (ces processus auront une valeur strictement négative comme valeur de retour de psend ou preceive). 
+ * Les messages se trouvant dans la file sont abandonnés.
+ * 
+ * int fid: la file à réinitialiser
+ * return: -1 si la valeur de fid est incorrecte, sinon 0
+ */
+int preset(int fid) {
+    // fid invalide
+    if (fid >= NBQUEUE || fid < 0) { return -1; }
+    
+    message_t* m = message_tab[fid];
+    if(!m) { return -1; }
+    
+    // Les messages se trouvant dans la file sont abandonnés.
+    if (!simple_list_empty(m->msg_file)) {
+        msg_node_t* node;
+        while (m->msg_file) {
+            node = simple_list_remove_first(&m->msg_file, msg_node_t, link);
+            mem_free(node, sizeof(msg_node_t));
+        }
+    }
+    
+    // pdelete détruit la file de messages identifiée par fid et fait passer dans l'état activable, ou actif, tous les processus, s'il en existe, qui se trouvaient bloqués sur la file. 
+    unblock_file_process(m->sender_queue);
+    unblock_file_process(m->receiver_queue);
+    
+    ordonnance();
+    
+    return 0;
+}
