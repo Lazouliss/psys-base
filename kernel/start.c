@@ -67,7 +67,7 @@ void kernel_start(void)
 	/***************************/
 	/* Tests complexes process */
 	/***************************/
-	start((void*)run_test_proc, MAX_STACK_SIZE, 128, "test_run", (void*)9);
+	start((void*)run_test_proc, MAX_STACK_SIZE, 128, "test_run", (void*)17);
 
 	// Démarrer le processus par défaut
 	idle();

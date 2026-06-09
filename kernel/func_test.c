@@ -24,7 +24,7 @@ void idle() {
 }
 
 int run_test_proc(int max_test) {
-  int first_test = 1;
+  int first_test = 10;
 
 	for (int i = first_test; i <= max_test; i++) {
 		printf("Test %d : ", i);

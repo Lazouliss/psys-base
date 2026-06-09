@@ -39,11 +39,8 @@ int pcreate(int count) {
     new_file->size_msg_file = 0;
     new_file->max_size_msg_file = count;
 
-    link sender_queue = LIST_HEAD_INIT(sender_queue);
-    link receiver_queue = LIST_HEAD_INIT(receiver_queue);
-
-    new_file->sender_queue = sender_queue;
-    new_file->receiver_queue = receiver_queue;
+    INIT_LIST_HEAD(&new_file->sender_queue);
+    INIT_LIST_HEAD(&new_file->receiver_queue);
 
     message_tab[last_fid] = new_file;
 
@@ -66,6 +63,7 @@ int get_pid_proc_block_msg(link head) {
         if (proc_iter->prio < proc_prev->prio) {
             return proc_prev->pid;
         }
+        if (proc_iter == proc_prev) {break;}
         proc_prev = proc_iter;
     }
 
@@ -87,8 +85,8 @@ int psend(int fid, int message) {
     if(!m) { return -1; }
 
     // Si la file est vide et que des processus sont bloqués en attente de message, alors le processus le plus ancien dans la file parmi les plus prioritaires est débloqué et reçoit ce message.
-    int pid_old_prio = get_pid_proc_block_msg(m->receiver_queue);
-    if (queue_empty(&m->receiver_queue) && pid_old_prio) {
+    if (simple_list_empty(&m->msg_file) && !queue_empty(&m->receiver_queue)) {
+        int pid_old_prio = get_pid_proc_block_msg(m->receiver_queue);
         processus_t* proc_blocked = processus_tab[pid_old_prio];
         proc_blocked->state = ACTIVABLE;
         proc_blocked->message = message;
@@ -149,7 +147,7 @@ int preceive(int fid, int *message) {
     // Si un message au moins est disponible dans la file, le premier message est transmis au processus. 
     if (m->size_msg_file > 0) {
         // Si la file était pleine, il faut alors immédiatement compléter la file avec le message du premier processus bloqué sur file pleine ; ce processus devient activable ou actif selon sa priorité
-        if (m->size_msg_file == m->max_size_msg_file) {
+        if (!queue_empty(&m->sender_queue) && m->size_msg_file == m->max_size_msg_file) {
             int pid_old_prio = get_pid_proc_block_msg(m->sender_queue);
             processus_t* proc_blocked = processus_tab[pid_old_prio];
             proc_blocked->state = ACTIVABLE;
@@ -192,9 +190,12 @@ int preceive(int fid, int *message) {
  * return: rien, les processus sont changé d'état et déplacés dans queue_process
  */
 void unblock_file_process(link head) {
+    if (queue_empty(&head)) { return; }
     processus_t* proc_iter;
     processus_t* proc_next;
     queue_for_each(proc_iter, &head, processus_t, link) {
+        if (!proc_iter->link.next) {break;}
+        // TODO: refaire les utilisations queue_entry pour réparer les next en dehors de la mémoire allouée
         // Manuellement passer au next link du proc_iter avant de le supprimer, sinon on perd la référence à la queue et on ne peut plus itérer
         proc_next = queue_entry(proc_iter->link.next, processus_t, link);
         
@@ -204,6 +205,9 @@ void unblock_file_process(link head) {
 
         queue_del(proc_iter, link);
         queue_add(proc_iter, &queue_process, processus_t, link, prio);
+
+        // si boucle infinie
+        if (proc_iter == proc_next) {break;}
 
         proc_iter = proc_next;
     }
@@ -234,8 +238,11 @@ int pdelete(int fid) {
     }
     
     // pdelete détruit la file de messages identifiée par fid et fait passer dans l'état activable, ou actif, tous les processus, s'il en existe, qui se trouvaient bloqués sur la file. 
+    print_queue();    
     unblock_file_process(m->sender_queue);
+    print_queue();
     unblock_file_process(m->receiver_queue);
+    print_queue();
 
     mem_free(m, sizeof(message_t));
 
