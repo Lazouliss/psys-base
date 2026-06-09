@@ -3,6 +3,7 @@
 #include "stdio.h"
 #include "mem.h"
 #include "horloge.h"
+#include "message.h"
 
 // initialisation de la table des processus
 link queue_process = LIST_HEAD_INIT(queue_process);
@@ -348,7 +349,7 @@ void ordonnance(void) {
     processus_t* proc_top = queue_top(&queue_process, processus_t, link);
     assert(proc_top);
 
-    if (proc_top->state == ELU || proc_top->state == ENDORMI || proc_top->state == ZOMBIE || proc_top->state == DYING || proc_top->state == BLOCK_CHILD) {
+    if (proc_top->state != ACTIVABLE) {
         actif = queue_out(&queue_process, processus_t, link);
         if (!actif) {return;} // Pas de processus à switcher
         switch(actif->state) {
@@ -363,6 +364,14 @@ void ordonnance(void) {
             case BLOCK_CHILD:
                 // si actif est BLOCK_CHILD on le place temporairement dans la queue des processus non executables
                 queue_add(actif, &queue_process_blocked, processus_t, link, prio);
+                break;
+            case BLOCK_MSG_RCV:
+                // si actif est BLOCK_MSG_RCV on le place dans la queue des receiver
+                queue_add(actif, &message_tab[actif->blocking_fid]->receiver_queue, processus_t, link, prio);
+                break;
+            case BLOCK_MSG_SND:
+                // si actif est BLOCK_MSG_SND on le place dans la queue des sender
+                queue_add(actif, &message_tab[actif->blocking_fid]->sender_queue, processus_t, link, prio);
                 break;
             default:
                 // Cas ELU ou autre, on le remet dans la queue des processus en ACTIVABLE

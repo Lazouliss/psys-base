@@ -12,15 +12,16 @@
 
 typedef enum
 {
-    ACTIVABLE = 0,  // Le processus n'attend que la possession du processeur pour s'exécuter.
-    ELU = 1,        // Le processus est celui qui possède le processeur.
-    ENDORMI = 2,    // Le processus a appelé wait_clock, la primitive de mise en sommeil jusqu'à une heure donnée.
-    BLOCK_MSG = 3,  // Le processus a exécuté une opération sur une file de message qui demande d'attendre pour progresser (par exemple preceive).
-    BLOCK_SEM = 4,  // Le processus a exécuté une opération sur un sémaphore qui demande d'attendre pour progresser (par exemple wait).
-    BLOCK_IO = 5,   // Le processus attend qu'une entrée/sortie soit réalisée.
-    BLOCK_CHILD = 6,// Le processus attend qu'un de ses processus fils soit terminé.
-    ZOMBIE = 7,     // Le processus a terminé son exécution ou a été terminé par l'appel système kill et son père est toujours vivant et n'a pas encore fait de waitpid sur lui.
-    DYING = 8       // Le processus a terminé son exécution et il doit être nettoyé
+    ACTIVABLE = 0,      // Le processus n'attend que la possession du processeur pour s'exécuter.
+    ELU = 1,            // Le processus est celui qui possède le processeur.
+    ENDORMI = 2,        // Le processus a appelé wait_clock, la primitive de mise en sommeil jusqu'à une heure donnée.
+    BLOCK_MSG_RCV = 3,  // Le processus a exécuté une opération sur une file de message qui attend un message pour progresser (par exemple preceive).
+    BLOCK_MSG_SND = 4,  // Le processus a exécuté une opération sur une file de message qui attend d'envoyer un message pour progresser (par exemple psend).
+    BLOCK_SEM = 5,      // Le processus a exécuté une opération sur un sémaphore qui demande d'attendre pour progresser (par exemple wait).
+    BLOCK_IO = 6,       // Le processus attend qu'une entrée/sortie soit réalisée.
+    BLOCK_CHILD = 7,    // Le processus attend qu'un de ses processus fils soit terminé.
+    ZOMBIE = 8,         // Le processus a terminé son exécution ou a été terminé par l'appel système kill et son père est toujours vivant et n'a pas encore fait de waitpid sur lui.
+    DYING = 9           // Le processus a terminé son exécution et il doit être nettoyé
 } states;
 
 typedef struct processus
@@ -29,6 +30,9 @@ typedef struct processus
     uint32_t p_pid;
     int32_t blocking_cid;           // le pid de l'enfant ou -1 pour n'importe lequel
     int retval;
+
+    int32_t blocking_fid;           // le fid de la file de message sur laquelle il est bloqué ou -1 si le processus était bloqué et que fid a été pdelete
+    int message;                    // message reçu par le processus
 
     const char* name;
     states state;                   // Process state (0: ready / activable, 1: running / élu, 2: sleeping / endormi)
