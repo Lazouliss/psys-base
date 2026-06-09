@@ -220,8 +220,37 @@ int pdelete(int fid) {
     return 0;
 }
 
-// TODO:
-int pcount(int fid, int count[static 1]) {return fid + count[0];}
+/**
+ * La primitive pcount lit la quantité de données et de processus en attente sur la file fid. 
+ * count n'est pas censé être nul
+ * 
+ * int fid: la file dont on cherche à compter le nombre de données
+ * int count[static 1]: emplacement de la valeur de retour
+ * return: -1 si la valeur de fid est incorrecte, sinon 0
+ */
+int pcount(int fid, int count[static 1]) {
+    // fid invalide
+    if (fid >= NBQUEUE || fid < 0) { return -1; }
+    
+    message_t* m = message_tab[fid];
+    if(!m) { return -1; }
+
+    // count est invalide
+    if (!count) { return -1; }
+
+    // valeur positive égale à la somme du nombre de messages dans la file
+    int nb_data = m->size_msg_file;
+
+    processus_t* proc_iter;
+    // valeur positive égale au nombre de processus bloqués sur file pleine
+    queue_for_each(proc_iter, &m->sender_queue, processus_t, link) { nb_data++; }
+    // valeur négative égale à l'opposé du nombre de processus bloqués sur file vide
+    queue_for_each(proc_iter, &m->receiver_queue, processus_t, link) { nb_data--; }
+
+    *count = nb_data;
+
+    return 0;
+}
 
 /**
  * Vide la file identifiée par la valeur de fid et fait passer dans l'état activable ou actif (selon les priorités) tous les processus, s'il en existe, se trouvant dans l'état bloqué sur file pleine ou dans l'état bloqué sur file vide (ces processus auront une valeur strictement négative comme valeur de retour de psend ou preceive). 
