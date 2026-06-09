@@ -1,27 +1,53 @@
 #include "message.h"
 #include "processus.h"
 #include "mem.h"
+#include "stdbool.h"
 
-uint32_t last_queue = 0;
+uint32_t last_fid = 0;
 message_t* message_tab[NBQUEUE];
 
-// TODO:
+/**
+ * La primitive pcreate alloue une file de capacité égale à la valeur de count. 
+ * S'il n'y a plus de file disponible ou si la valeur de count est négative ou nulle la valeur de retour de pcreate est strictement négative sinon elle identifie la file qui a été allouée.
+ * 
+ * int count: taille maximum de la file à allouer
+ * return: l'identifiant de la file nouvellement créée
+ */
 int pcreate(int count) {
     // Count négatif ou plus de file disponible
-    if (count <= 0 || last_queue >= NBQUEUE) {
+    if (count <= 0 || last_fid >= NBQUEUE) {
         return -1;
     }
 
+    bool space_found = false;
     // Calcul du prochain FID disponible
     for (size_t i = 1; i < NBQUEUE; i++)
     {
-        if(message_tab[(i+last_queue) % NBQUEUE] == NULL) {
-            last_queue = (i+last_queue) % NBQUEUE;
+        if(message_tab[(i+last_fid) % NBQUEUE] == NULL) {
+            last_fid = (i+last_fid) % NBQUEUE;
+            space_found = true;
             break;
         }
     }
 
-    return count;   // TODO:
+    // plus de file dispo
+    if (!space_found) { return -1; }
+
+    message_t* new_file = mem_alloc(sizeof(message_t));
+
+    new_file->fid = last_fid;
+    new_file->size_msg_file = 0;
+    new_file->max_size_msg_file = count;
+
+    link sender_queue = LIST_HEAD_INIT(sender_queue);
+    link receiver_queue = LIST_HEAD_INIT(receiver_queue);
+
+    new_file->sender_queue = sender_queue;
+    new_file->receiver_queue = receiver_queue;
+
+    message_tab[last_fid] = new_file;
+
+    return last_fid;
 }
 
 /**

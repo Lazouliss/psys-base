@@ -451,15 +451,21 @@ int32_t start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, 
     const unsigned long max_ssize = (unsigned long)MAX_STACK_SIZE * sizeof(uint32_t);
     if (prio <= 0 || prio >= MAX_PRIO) {return -1;}
     if (ssize_user > max_ssize) {return -1;}
+
+    bool space_found = false;
     // Calcul du prochain PID disponible
     for (size_t i = 1; i < NBPROC; i++)
     {
         // Ignorer le PID 0 réservé pour le processus idle
         if(processus_tab[(i+last_pid) % NBPROC] == NULL) {
             last_pid = (i+last_pid) % NBPROC;
+            space_found = true;
             break;
         }
     }
+
+    // plus de processus dispo
+    if (!space_found) { return -1; }
 
     processus_t* new_processus = mem_alloc(sizeof(processus_t));
     if (!new_processus) {return -1;}
