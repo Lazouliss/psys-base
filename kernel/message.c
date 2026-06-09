@@ -235,9 +235,6 @@ int pcount(int fid, int count[static 1]) {
     message_t* m = message_tab[fid];
     if(!m) { return -1; }
 
-    // count est invalide
-    if (!count) { return -1; }
-
     // valeur positive égale à la somme du nombre de messages dans la file
     int nb_data = m->size_msg_file;
 
