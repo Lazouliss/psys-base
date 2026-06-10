@@ -422,15 +422,28 @@ int chprio(int pid, int newprio) {
         processus_tab[pid]->state == ZOMBIE || processus_tab[pid]->state == DYING) {
         return -1;
     }
-    int old_prio = processus_tab[pid]->prio;
-    processus_tab[pid]->prio = newprio;
-    if (processus_tab[pid]->state == ACTIVABLE) {
+    processus_t* proc = processus_tab[pid];
+    int old_prio = proc->prio;
+    proc->prio = newprio;
+    if (proc->state == ACTIVABLE) {
         // il doit y être replacé selon sa nouvelle priorité.
-        queue_del(processus_tab[pid], link);
-        queue_add(processus_tab[pid], &queue_process, processus_t, link, prio);
+        queue_del(proc, link);
+        queue_add(proc, &queue_process, processus_t, link, prio);
+    } 
+    // Un processus bloqué sur file vide et dont la priorité est changée par chprio, est considéré comme le dernier processus (le plus jeune) de sa nouvelle priorité.
+    else if (proc->state == BLOCK_MSG_RCV || proc->state == BLOCK_MSG_SND) {
+        // Reordonner dans la file de messages selon la nouvelle priorité
+        int fid = proc->blocking_fid;
+        if (fid >= 0 && fid < NBQUEUE && message_tab[fid]) {
+            link *q = (proc->state == BLOCK_MSG_SND)
+                      ? &message_tab[fid]->sender_queue
+                      : &message_tab[fid]->receiver_queue;
+            queue_del(proc, link);
+            queue_add(proc, q, processus_t, link, prio);
+        }
     }
     // Si le processus élu perd de la priorité, on ordonnance
-    if (processus_tab[pid]->state == ELU) {
+    if (proc->state == ELU) {
         ordonnance();
     }
     return old_prio;
