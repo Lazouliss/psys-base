@@ -86,10 +86,6 @@ int psend(int fid, int message) {
         ordonnance();
         // Apres reveil : verifier si la file a ete supprimee
         if (actif->blocking_fid == -1) return -1;
-        // Deposer le message dans le tampon
-        m->buffer[m->buf_tail] = message;
-        m->buf_tail = (m->buf_tail + 1) % m->capacity;
-        m->count++;
     }
     // Sinon, la file n'est pas pleine et aucun processus n'est bloqué en attente de message. Le message est alors déposé directement dans la file.
     else {
@@ -127,6 +123,12 @@ int preceive(int fid, int *message) {
         // Si la file était pleine, il faut alors immédiatement compléter la file avec le message du premier processus bloqué sur file pleine ; ce processus devient activable ou actif selon sa priorité
         if (!queue_empty(&m->sender_queue)) {
             processus_t *sndr = queue_out(&m->sender_queue, processus_t, link);
+
+            // transfert du message du sender vers le buffer
+            m->buffer[m->buf_tail] = sndr->message;
+            m->buf_tail = (m->buf_tail + 1) % m->capacity;
+            m->count++;
+
             sndr->state = ACTIVABLE;
             queue_add(sndr, &queue_process, processus_t, link, prio);
         }
