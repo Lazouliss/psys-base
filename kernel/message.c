@@ -185,49 +185,35 @@ int preceive(int fid, int *message) {
 
 /**
  * Passe tous les processus_t de la queue head à l'état ACTIVABLE et les rajoutent dans queue_process.
- * 
+ *
  * link head: la liste à vider et à déplacer dans queue_process
  * return: rien, les processus sont changé d'état et déplacés dans queue_process
  */
-void unblock_file_process(link head) {
-    if (queue_empty(&head)) { return; }
-    processus_t* proc_iter;
-    processus_t* proc_next;
-    queue_for_each(proc_iter, &head, processus_t, link) {
-        if (!proc_iter->link.next) {break;}
-        // TODO: refaire les utilisations queue_entry pour réparer les next en dehors de la mémoire allouée
-        // Manuellement passer au next link du proc_iter avant de le supprimer, sinon on perd la référence à la queue et on ne peut plus itérer
-        proc_next = queue_entry(proc_iter->link.next, processus_t, link);
-        
-        proc_iter->state = ACTIVABLE;
-        // Les processus libérés auront une valeur strictement négative comme retour de psend ou preceive. 
-        proc_iter->blocking_fid = -1;
-
-        queue_del(proc_iter, link);
-        queue_add(proc_iter, &queue_process, processus_t, link, prio);
-
-        // si boucle infinie
-        if (proc_iter == proc_next) {break;}
-
-        proc_iter = proc_next;
+void unblock_file_process(link* head) {
+    while (!queue_empty(head)) {
+        processus_t *proc = queue_out(head, processus_t, link);
+        if (!proc) { return; }
+        proc->state = ACTIVABLE;
+        proc->blocking_fid = -1;
+        queue_add(proc, &queue_process, processus_t, link, prio);
     }
 }
 
 /**
- * Détruit la file de messages identifiée par fid et fait passer dans l'état activable, ou actif, tous les processus, s'il en existe, qui se trouvaient bloqués sur la file. 
- * Les processus libérés auront une valeur strictement négative comme retour de psend ou preceive. 
+ * Détruit la file de messages identifiée par fid et fait passer dans l'état activable, ou actif, tous les processus, s'il en existe, qui se trouvaient bloqués sur la file.
+ * Les processus libérés auront une valeur strictement négative comme retour de psend ou preceive.
  * Les messages se trouvant dans la file sont abandonnés.
- * 
+ *
  * int fid: la file à supprimer
  * return: -1 si la valeur de fid est incorrecte, sinon 0
  */
 int pdelete(int fid) {
     // fid invalide
     if (fid >= NBQUEUE || fid < 0) { return -1; }
-    
+
     message_t* m = message_tab[fid];
     if(!m) { return -1; }
-    
+
     // Les messages se trouvant dans la file sont abandonnés.
     if (!simple_list_empty(m->msg_file)) {
         msg_node_t* node;
@@ -236,20 +222,17 @@ int pdelete(int fid) {
             mem_free(node, sizeof(msg_node_t));
         }
     }
-    
-    // pdelete détruit la file de messages identifiée par fid et fait passer dans l'état activable, ou actif, tous les processus, s'il en existe, qui se trouvaient bloqués sur la file. 
-    print_queue();    
-    unblock_file_process(m->sender_queue);
-    print_queue();
-    unblock_file_process(m->receiver_queue);
-    print_queue();
+
+    // pdelete détruit la file de messages identifiée par fid et fait passer dans l'état activable, ou actif, tous les processus, s'il en existe, qui se trouvaient bloqués sur la file.
+    unblock_file_process(&m->sender_queue);
+    unblock_file_process(&m->receiver_queue);
 
     mem_free(m, sizeof(message_t));
 
     message_tab[fid] = NULL;
-    
+
     ordonnance();
-    
+
     return 0;
 }
 
@@ -306,8 +289,8 @@ int preset(int fid) {
     }
     
     // pdelete détruit la file de messages identifiée par fid et fait passer dans l'état activable, ou actif, tous les processus, s'il en existe, qui se trouvaient bloqués sur la file. 
-    unblock_file_process(m->sender_queue);
-    unblock_file_process(m->receiver_queue);
+    unblock_file_process(&m->sender_queue);
+    unblock_file_process(&m->receiver_queue);
     
     ordonnance();
     
