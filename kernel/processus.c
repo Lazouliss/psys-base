@@ -3,6 +3,7 @@
 #include "stdio.h"
 #include "mem.h"
 #include "horloge.h"
+#include "message.h"
 
 // initialisation de la table des processus
 link queue_process = LIST_HEAD_INIT(queue_process);
@@ -348,7 +349,7 @@ void ordonnance(void) {
     processus_t* proc_top = queue_top(&queue_process, processus_t, link);
     assert(proc_top);
 
-    if (proc_top->state == ELU || proc_top->state == ENDORMI || proc_top->state == ZOMBIE || proc_top->state == DYING || proc_top->state == BLOCK_CHILD) {
+    if (proc_top->state != ACTIVABLE) {
         actif = queue_out(&queue_process, processus_t, link);
         if (!actif) {return;} // Pas de processus à switcher
         switch(actif->state) {
@@ -363,6 +364,14 @@ void ordonnance(void) {
             case BLOCK_CHILD:
                 // si actif est BLOCK_CHILD on le place temporairement dans la queue des processus non executables
                 queue_add(actif, &queue_process_blocked, processus_t, link, prio);
+                break;
+            case BLOCK_MSG_RCV:
+                // si actif est BLOCK_MSG_RCV on le place dans la queue des receiver
+                queue_add(actif, &message_tab[actif->blocking_fid]->receiver_queue, processus_t, link, prio);
+                break;
+            case BLOCK_MSG_SND:
+                // si actif est BLOCK_MSG_SND on le place dans la queue des sender
+                queue_add(actif, &message_tab[actif->blocking_fid]->sender_queue, processus_t, link, prio);
                 break;
             default:
                 // Cas ELU ou autre, on le remet dans la queue des processus en ACTIVABLE
@@ -419,6 +428,18 @@ int chprio(int pid, int newprio) {
         // il doit y être replacé selon sa nouvelle priorité.
         queue_del(processus_tab[pid], link);
         queue_add(processus_tab[pid], &queue_process, processus_t, link, prio);
+    } 
+    // Un processus bloqué sur file vide et dont la priorité est changée par chprio, est considéré comme le dernier processus (le plus jeune) de sa nouvelle priorité.
+    else if (processus_tab[pid]->state == BLOCK_MSG_RCV || processus_tab[pid]->state == BLOCK_MSG_SND) {
+        // Reordonner dans la file de messages selon la nouvelle priorité
+        int fid = processus_tab[pid]->blocking_fid;
+        if (fid >= 0 && fid < NBQUEUE && message_tab[fid]) {
+            link *q = (processus_tab[pid]->state == BLOCK_MSG_SND)
+                      ? &message_tab[fid]->sender_queue
+                      : &message_tab[fid]->receiver_queue;
+            queue_del(processus_tab[pid], link);
+            queue_add(processus_tab[pid], q, processus_t, link, prio);
+        }
     }
     // Si le processus élu perd de la priorité, on ordonnance
     if (processus_tab[pid]->state == ELU) {
@@ -442,15 +463,21 @@ int32_t start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, 
     const unsigned long max_ssize = (unsigned long)MAX_STACK_SIZE * sizeof(uint32_t);
     if (prio <= 0 || prio >= MAX_PRIO) {return -1;}
     if (ssize_user > max_ssize) {return -1;}
+
+    bool space_found = false;
     // Calcul du prochain PID disponible
     for (size_t i = 1; i < NBPROC; i++)
     {
         // Ignorer le PID 0 réservé pour le processus idle
         if(processus_tab[(i+last_pid) % NBPROC] == NULL) {
             last_pid = (i+last_pid) % NBPROC;
+            space_found = true;
             break;
         }
     }
+
+    // plus de processus dispo
+    if (!space_found) { return -1; }
 
     processus_t* new_processus = mem_alloc(sizeof(processus_t));
     if (!new_processus) {return -1;}
