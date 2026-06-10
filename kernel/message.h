@@ -4,29 +4,25 @@
 #include "stdint.h"
 #include "debug.h"
 #include "queue.h"
-#include "linked_list.h"
 
-#define NBQUEUE 10
-
-typedef struct msg_node {
-    int value;
-    simple_link link;
-} msg_node_t;
+#define NBQUEUE 100
+#define MAX_BUFFER 992
 
 typedef struct message
 {
     uint32_t fid;
 
-    msg_node_t *msg_file;               // file de message
-    uint32_t size_msg_file;             // current size
-    uint32_t max_size_msg_file;         // max size
+    int *buffer;                        // tampon circulaire pre-alloue
+    uint32_t buf_head;                  // indice de lecture
+    uint32_t buf_tail;                  // indice d'ecriture
+    uint32_t count;                     // nombre de messages actuels
+    uint32_t capacity;                  // capacite max
 
     link sender_queue;                  // queue des processus bloqués à l'envoi un message
     link receiver_queue;                // queue des processus bloqués au moment de recevoir un message
 
 } message_t;
 
-extern uint32_t last_queue;
 extern message_t* message_tab[NBQUEUE];
 
 int pcreate(int count);
