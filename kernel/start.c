@@ -1,43 +1,16 @@
 #include "../kernel/func_test.h"
 #include "mem.h"
+#include "syscall.h"
+#include "start.h"
 
 void kernel_start(void)
 {
-	int i;
-	// call_debugger(); useless with qemu -s -S
-	i = 10;
-	i = fact(i);
-
-	/************************/
-	/* Tests simples printf */
-	/************************/
-	//efface_ecran();
-	// Supprime le contenu de l'écran de base
-	printf("\f");
-	// Affiche un simple texte qui disparaitra
-	printf("Hello, World!\n");
-	// Affiche le résultat contenu dans la variable i
-	printf("10! = %d\n", i);
-	// Test tabulation
-	printf("tab\tulation\n");
-	// Test defilement()
-	printf("ééé\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nderniere lignes");
-	// Test place_curseur() au milieu de l'écran
-	place_curseur(12, 40);
-	// Reviens au début de la ligne, puis écrit 5 caractères, et place le curseur SUR le dernier caractère
-	printf("\r klfd\b");
-	// Nettoyage de tout l'écran
-	printf("\f");
-
 	/*************************/
 	/* Tests simples horloge */
 	/*************************/
 	//print_horloge("12:34:56");
 	config_horloge();
-
-	// démasquage des interruptions externes
-    //sti(); // Inutile avec l'ajout des processus dynamiques
-
+	init_traitant_IT(0x49, _syscall_entry);
 	/*************************/
 	/* Tests simples process */
 	/*************************/
@@ -56,19 +29,24 @@ void kernel_start(void)
 
 	actif = idle_process;
 	processus_tab[idle_process->pid] = idle_process;
-	/*
-	start(proc1, MAX_STACK_SIZE, DEFAULT_PRIO, "proc1", NULL);
-	start(proc2, MAX_STACK_SIZE, DEFAULT_PRIO, "proc2", NULL);
-	start(proc3, MAX_STACK_SIZE, DEFAULT_PRIO, "proc3", NULL);
-	start(proc4, MAX_STACK_SIZE, DEFAULT_PRIO, "proc4", NULL);
-	start(proc6, MAX_STACK_SIZE, DEFAULT_PRIO, "proc6", NULL);
-	 */
 
+	/******************/
+	/* Tests simples  */
+	/******************/
+	// start((void*)simple_test, MAX_STACK_SIZE, 128, "test_run", (void*)0);
 	/***************************/
 	/* Tests complexes process */
 	/***************************/
-	start((void*)run_test_proc, MAX_STACK_SIZE, 128, "test_run", (void*)17);
+	// start((void*)run_test_proc, MAX_STACK_SIZE, 128, "test_run", (void*)20);
 
+	/****************/
+	/* Tests ring 3 */
+	/****************/
+	int32_t pid = start((int*)user_start, 0, 128, "user_start", NULL);
+	if (pid < 0) {
+		printf("[kernel] echec user init\n");
+		return -1;
+	}
 	// Démarrer le processus par défaut
 	idle();
 
