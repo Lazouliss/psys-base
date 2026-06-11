@@ -42,10 +42,10 @@ void kernel_start(void)
 	/****************/
 	/* Tests ring 3 */
 	/****************/
-	int32_t pid = start((int*)user_start, 0, 128, "user_start", NULL);
+	int32_t pid = start((void*)user_start, 0, 128, "user_start", NULL);
 	if (pid < 0) {
 		printf("[kernel] echec user init\n");
-		return -1;
+		return;
 	}
 	// Démarrer le processus par défaut
 	idle();
