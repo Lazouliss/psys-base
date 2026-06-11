@@ -3,6 +3,7 @@
 #include "horloge.h"
 
 int test_run(int n);
+int test20();
 
 int fact(int n)
 {
