@@ -748,6 +748,7 @@ assert_failed(const char *cond, const char *file, int line)
 	*(char *)0 = 0;
 	exit(-1);
 	while (1) ;
+	return 0;
 }
 
 // static void

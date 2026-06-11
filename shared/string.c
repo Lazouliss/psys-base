@@ -296,7 +296,10 @@ void memswap(void *m1, void *m2, size_t n)
 
 char *strcat(char *dst, const char *src)
 {
-	strcpy(strchr(dst, '\0'), src);
+	char *end = strchr(dst, '\0');
+	if (end == NULL)
+		__builtin_unreachable();
+	strcpy(end, src);
 	return dst;
 }
 /*
@@ -424,6 +427,8 @@ size_t strnlen(const char *s, size_t maxlen)
 char *strncat(char *dst, const char *src, size_t n)
 {
 	char *q = strchr(dst, '\0');
+	if (q == NULL)
+		__builtin_unreachable();
 	const char *p = src;
 	char ch;
 

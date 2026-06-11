@@ -5,12 +5,23 @@
 # Copyright (C) 2014,2019 - Grégory Mounie <Gregory.Mounie@imag.fr>
 
 ### Tools ###
+UNAME := $(shell uname)
+
+ifeq ($(UNAME), Darwin)
+CC := i686-elf-gcc
+AS := i686-elf-gcc
+LD := i686-elf-ld
+AR := i686-elf-ar
+DEP := i686-elf-gcc
+OBJCOPY := i686-elf-objcopy
+else
 CC := gcc-14
 AS := gcc-14
 LD := ld
 AR := ar
 DEP := gcc-14
 OBJCOPY := objcopy
+endif
 MKDIR := mkdir
 CP := cp
 GEN_SECTIONS := build/generate-link-sections.sh
@@ -42,6 +53,7 @@ CFLAGS := -m32 \
 		  -fno-stack-protector \
 		  -fno-pie -no-pie \
 		  -march=pentium \
+		  -fno-builtin \
 		  $(DEFS)
 ASFLAGS := -m32 -g\
 		   -DASSEMBLER \
@@ -80,7 +92,7 @@ include build/kbd-linux.mk
 .PHONY: $(OUTPUT)/userdata.o
 $(OUTPUT)/userdata.o: ../user/user.bin
 	$(MAKE) -C ../user
-	objcopy $(OUTPUT)/empty.o --add-section=.user=$^ --set-section-flags=.user=contents,alloc,load,data $@
+	$(OBJCOPY) $(OUTPUT)/empty.o --add-section=.user=$^ --set-section-flags=.user=contents,alloc,load,data $@
 
 
 ### Generate the kernel, ready to run ###
@@ -103,11 +115,11 @@ bochs: cd.iso
 
 ### Generic rules ###
 $(OUTPUT)/%.d: %.c | $(OUTPUT)
-	@echo -n "$(@D)/" > $@
+	@printf "%s/" "$(@D)" > $@
 	$(DEP) $(INCLUDES) -MM $< >> $@
 
 $(OUTPUT)/%.d: %.S | $(OUTPUT)
-	@echo -n "$(@D)/" > $@
+	@printf "%s/" "$(@D)" > $@
 	$(DEP) $(INCLUDES) -MM $< >> $@
 
 $(OUTPUT)/%.o: %.c | $(OUTPUT)

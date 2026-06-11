@@ -8,11 +8,21 @@ DIRS=. ../shared
 OUTPUT := out
 OBJS   := $(addprefix $(OUTPUT)/, $(patsubst %.S, %.o, $(patsubst %.c, %.o, $(FILES))))
 
+UNAME := $(shell uname)
+
+ifeq ($(UNAME), Darwin)
+CC=i686-elf-gcc -m32
+AS=i686-elf-gcc -m32
+LD=i686-elf-ld -melf_i386
+OBJCOPY=i686-elf-objcopy
+else
 CC=gcc-14 -m32
 AS=gcc-14 -m32
 LD=ld -melf_i386
+OBJCOPY=objcopy
+endif
 
-KFLAGS=-Wall -Wextra -g -pipe -std=gnu23 -fanalyzer -nostdinc -fno-stack-protector
+KFLAGS=-Wall -Wextra -g -pipe -std=gnu23 -fanalyzer -nostdinc -fno-stack-protector -fno-builtin
 #KFLAGS=-Wall -O2 -fomit-frame-pointer -pipe -std=c99 -nostdinc
 
 DEF=
@@ -58,7 +68,7 @@ user.debug: user.lds $(OBJS)
 	$(LD) -e entry -oformat=binary -Tuser.lds $(OBJS) -o $@
 
 user.bin: user.debug
-	objcopy -O binary $< $@
+	$(OBJCOPY) -O binary $< $@
 
 # Create build directory for targets but don't depends on its creation date
 $(OBJS): | $(OUTPUT)

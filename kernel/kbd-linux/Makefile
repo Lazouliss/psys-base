@@ -1,9 +1,19 @@
 # Copyright (C) 2002 by Simon Nieuviarts
 FILES=keyboard.c scancode.c
 OBJS=$(notdir $(patsubst %.S,%.o,$(patsubst %.c,%.o,$(FILES))))
+UNAME := $(shell uname)
+
+ifeq ($(UNAME), Darwin)
+CC=i686-elf-gcc -m32
+AS=i686-elf-gcc -m32
+LD=i686-elf-ld -melf_i386
+OBJCOPY=i686-elf-objcopy
+else
 CC=gcc -m32
 AS=gcc -m32
 LD=ld -melf_i386
+OBJCOPY=objcopy
+endif
 DIRS=.
 
 KFLAGS=-Wall -Wextra -Werror -O2 -fomit-frame-pointer -pipe -nostdinc
@@ -52,7 +62,7 @@ uskm:
 	cp -f defkeymap.c keymap.c
 
 keymap2.o: keymap.o
-	objcopy `nm -g -f posix $^ | awk '{printf " --redefine-sym "$$1"=keyboard_"$$1}'` $^ $@
+	$(OBJCOPY) `nm -g -f posix $^ | awk '{printf " --redefine-sym "$$1"=keyboard_"$$1}'` $^ $@
 
 kbd_linux.o: $(OBJS) keymap2.o
 	$(LD) -r $^ -o $@

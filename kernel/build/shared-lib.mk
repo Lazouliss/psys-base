@@ -1,5 +1,5 @@
 #
-# Ensimag - Projet système
+# Ensimag - Projet systÃ¨me
 # Copyright (C) 2012 - Damien Dejean <dam.dejean@gmail.com>
 #
 
@@ -55,11 +55,11 @@ ifneq "$(MAKECMDGOALS)" "clean"
 endif
 
 $(SHARED_LIB_OUT)/%.d: %.c | $(SHARED_LIB_OUT)
-	@echo -n "$(@D)/" > $@
+	@printf "%s/" "$(@D)" > $@
 	$(DEP) -MM $< $(SHARED_LIB_INC) >> $@
 
 $(SHARED_LIB_OUT)/%.d: %.S | $(SHARED_LIB_OUT)
-	@echo -n "$(@D)/" > $@
+	@printf "%s/" "$(@D)" > $@
 	$(DEP) -MM $< $(SHARED_LIB_INC) >> $@
 
 
