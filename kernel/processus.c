@@ -4,6 +4,7 @@
 #include "mem.h"
 #include "horloge.h"
 #include "message.h"
+#include "user_stack_mem.h"
 
 // initialisation de la table des processus
 link queue_process = LIST_HEAD_INIT(queue_process);
@@ -482,19 +483,22 @@ int32_t start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, 
     processus_t* new_processus = mem_alloc(sizeof(processus_t));
     if (!new_processus) {return -1;}
 
-    //uint32_t stack_words = ssize_user / sizeof(uint32_t);
-    //uint32_t stack_size = stack_words > MAX_STACK_SIZE ? MAX_STACK_SIZE : stack_words;
+    // Allocation de la pile kernel / utilisateur
+    new_processus->kernel_stack = mem_alloc(sizeof(uint32_t) * MAX_STACK_SIZE);
+
+    new_processus->user_stack_size = ssize_user;
+    new_processus->user_stack = user_stack_alloc(sizeof(uint32_t) * ssize_user);
 
     new_processus->pid = last_pid;
     new_processus->name = name;
     new_processus->state = ACTIVABLE;
     // Placer l'adresse de code en sommet de pile et initialiser %esp
-    new_processus->stack[MAX_STACK_SIZE - 4] = (uint32_t)run_process_exec;
-    new_processus->stack[MAX_STACK_SIZE - 2] = (uint32_t)pt_func;
-    new_processus->stack[MAX_STACK_SIZE - 1] = (uint32_t)arg;
+    new_processus->kernel_stack[MAX_STACK_SIZE - 4] = (uint32_t)run_process_exec;
+    new_processus->kernel_stack[MAX_STACK_SIZE - 2] = (uint32_t)pt_func;
+    new_processus->kernel_stack[MAX_STACK_SIZE - 1] = (uint32_t)arg;
     new_processus->registers[0] = 0;
-    new_processus->registers[1] = (uint32_t)&new_processus->stack[MAX_STACK_SIZE - 4];  // %esp -> wrapper d'exécution
-    new_processus->registers[2] = (uint32_t)&new_processus->stack[MAX_STACK_SIZE - 3];  // %ebp -> valeur de retour du wrapper
+    new_processus->registers[1] = (uint32_t)&new_processus->kernel_stack[MAX_STACK_SIZE - 4];  // %esp -> wrapper d'exécution
+    new_processus->registers[2] = (uint32_t)&new_processus->kernel_stack[MAX_STACK_SIZE - 3];  // %ebp -> valeur de retour du wrapper
     new_processus->registers[3] = 0;
     new_processus->registers[4] = 0;
     new_processus->prio = prio;

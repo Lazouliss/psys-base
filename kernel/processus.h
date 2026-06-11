@@ -4,6 +4,7 @@
 #include "stdint.h"
 #include "queue.h"
 #include "linked_list.h"
+#include "stdbool.h"
 
 #define MAX_STACK_SIZE 2048
 #define NBPROC 30
@@ -37,13 +38,17 @@ typedef struct processus
     const char* name;
     states state;                   // Process state (0: ready / activable, 1: running / élu, 2: sleeping / endormi)
     uint32_t registers[5];          // CPU registers (ebx, esp, ebp, esi, edi)
-    uint32_t stack[MAX_STACK_SIZE]; // pile d'execution des processus
+    uint32_t* kernel_stack;         // pile d'execution des processus kernel
     int32_t prio;                   // priorité du processus (pour l'ordonnanceur)
     int32_t time_to_wake;           // nombre de secondes avant de se réveiller (pour les processus endormis)
 
     link link;                      // pointeur vers le processus suivant dans la liste des processus
     struct processus* children;     // liste des processus fils (simple linked list)
     simple_link siblings;           // pointeur vers le processus frere suivant
+
+    bool is_user;                   // indicateur du niveau de ring (0:0 ; 1:3)
+    uint32_t user_stack_size;       // taille de la pile utilisateur
+    uint32_t* user_stack;           // pile d'execution des processus utilisateurs
 } processus_t;
 
 extern link queue_process;
