@@ -5,6 +5,8 @@
 #include "horloge.h"
 #include "message.h"
 #include "user_stack_mem.h"
+#include "processor_structs.h"
+#include "syscall.h"
 
 // initialisation de la table des processus
 link queue_process = LIST_HEAD_INIT(queue_process);
@@ -391,6 +393,12 @@ void ordonnance(void) {
     processus_t* old_actif = actif;
     actif = new_actif;
 
+    // Lorsqu'un processus est de type user, on doit actualiser le pointeur vers la tête de sa stack kernel dans le TSS pour que les interruptions puissent fonctionner correctement
+    if (new_actif->is_user) {
+        tss.esp0 = (uint32_t)(actif->kernel_stack[MAX_STACK_SIZE]);
+        tss.ss0 = KERNEL_DS;
+    }
+
     ctx_sw(old_actif->registers, new_actif->registers);
 }
 
@@ -485,23 +493,61 @@ int32_t start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, 
 
     // Allocation de la pile kernel / utilisateur
     new_processus->kernel_stack = mem_alloc(sizeof(uint32_t) * MAX_STACK_SIZE);
+    if (!new_processus->kernel_stack) {
+        mem_free(new_processus, sizeof(processus_t));
+        return -1;
+    }
 
-    new_processus->user_stack_size = ssize_user;
-    new_processus->user_stack = user_stack_alloc(sizeof(uint32_t) * ssize_user);
-
+    // Initialisation des paramètres commun du processus
     new_processus->pid = last_pid;
     new_processus->name = name;
     new_processus->state = ACTIVABLE;
-    // Placer l'adresse de code en sommet de pile et initialiser %esp
-    new_processus->kernel_stack[MAX_STACK_SIZE - 4] = (uint32_t)run_process_exec;
-    new_processus->kernel_stack[MAX_STACK_SIZE - 2] = (uint32_t)pt_func;
-    new_processus->kernel_stack[MAX_STACK_SIZE - 1] = (uint32_t)arg;
     new_processus->registers[0] = 0;
-    new_processus->registers[1] = (uint32_t)&new_processus->kernel_stack[MAX_STACK_SIZE - 4];  // %esp -> wrapper d'exécution
-    new_processus->registers[2] = (uint32_t)&new_processus->kernel_stack[MAX_STACK_SIZE - 3];  // %ebp -> valeur de retour du wrapper
+    new_processus->registers[1] = 0;
+    new_processus->registers[2] = 0;
     new_processus->registers[3] = 0;
     new_processus->registers[4] = 0;
     new_processus->prio = prio;
+
+    if (ssize_user > 0) {
+        // Initialisation du processus utilisateur
+        new_processus->is_user = true;
+        new_processus->user_stack_size = ssize_user;
+        new_processus->user_stack = user_stack_alloc(ssize_user);
+        if (!new_processus->user_stack) {
+            mem_free(new_processus->kernel_stack, sizeof(uint32_t) * MAX_STACK_SIZE);
+            mem_free(new_processus, sizeof(processus_t));
+            return -1;
+        }
+
+        // Calcul de l'adresse de la pile utilisateur
+        uint32_t esp_user = (uint32_t)new_processus->user_stack + (uint32_t)ssize_user;
+
+        new_processus->kernel_stack[MAX_STACK_SIZE - 1] = (uint32_t)USER_DS;    // SS_user
+        new_processus->kernel_stack[MAX_STACK_SIZE - 2] = esp_user;             // sommet de la pile utilisateur
+        new_processus->kernel_stack[MAX_STACK_SIZE - 3] = 0x202;                // EFLAGS : IF=1, IOPL=0
+        new_processus->kernel_stack[MAX_STACK_SIZE - 4] = (uint32_t)USER_CS;    // CS_user
+        new_processus->kernel_stack[MAX_STACK_SIZE - 5] = (uint32_t)pt_func;    // EIP_user (adresse d'entrée du code user)
+        new_processus->kernel_stack[MAX_STACK_SIZE - 6] = (uint32_t)return_to_user; // adresse de retour pour ctx_sw
+
+        // pointeur vers le wrapper return_to_user (iret)
+        new_processus->registers[1] = (uint32_t)&new_processus->kernel_stack[MAX_STACK_SIZE - 6];
+
+    } else {
+        // Initialisation du processus kernel
+        new_processus->is_user = false;
+        new_processus->user_stack_size = 0;
+        new_processus->user_stack = NULL;
+
+        // Placer l'adresse de code en sommet de pile et initialiser %esp
+        new_processus->kernel_stack[MAX_STACK_SIZE - 4] = (uint32_t)run_process_exec;
+        new_processus->kernel_stack[MAX_STACK_SIZE - 2] = (uint32_t)pt_func;
+        new_processus->kernel_stack[MAX_STACK_SIZE - 1] = (uint32_t)arg;
+
+        new_processus->registers[1] = (uint32_t)&new_processus->kernel_stack[MAX_STACK_SIZE - 4]; // %esp -> wrapper d'exécution
+        new_processus->registers[2] = (uint32_t)&new_processus->kernel_stack[MAX_STACK_SIZE - 3]; // %ebp -> valeur de retour du wrapper
+    }
+
     // Filiation
     new_processus->p_pid = actif->pid;
     simple_list_init(&new_processus->children);

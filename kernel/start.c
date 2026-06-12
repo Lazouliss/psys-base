@@ -10,7 +10,7 @@ void kernel_start(void)
 	/*************************/
 	//print_horloge("12:34:56");
 	config_horloge();
-	init_traitant_IT(0x49, _syscall_entry);
+	init_syscall(0x49, traitant_IT_49);
 	/*************************/
 	/* Tests simples process */
 	/*************************/
@@ -42,7 +42,7 @@ void kernel_start(void)
 	/****************/
 	/* Tests ring 3 */
 	/****************/
-	int32_t pid = start((void*)user_start, 0, 128, "user_start", NULL);
+	int32_t pid = start((void*)user_start, 4096, 128, "user_start", NULL);
 	if (pid < 0) {
 		printf("[kernel] echec user init\n");
 		return;
