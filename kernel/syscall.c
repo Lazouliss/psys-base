@@ -1,11 +1,13 @@
 #include "syscall.h"
 #include "stdio.h"
 #include "processus.h"
+#include "../shared/console.h"
 
 int32_t syscall_PIT(int32_t num, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5)
 {
     switch (num) {
         case SYS_GETPID: return getpid();
+        case SYS_CONS_WRITE: cons_write((unsigned long)a1, (const char *)a2); return 0;
         default:
             return -1;
     }

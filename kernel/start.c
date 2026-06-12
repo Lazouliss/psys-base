@@ -5,12 +5,15 @@
 
 void kernel_start(void)
 {
+	// Nettoyage de l'écran
+	printf("\f");
+
 	/*************************/
 	/* Tests simples horloge */
 	/*************************/
 	//print_horloge("12:34:56");
 	config_horloge();
-	init_syscall(0x49, traitant_IT_49);
+	init_syscall(49, traitant_IT_49);
 	/*************************/
 	/* Tests simples process */
 	/*************************/

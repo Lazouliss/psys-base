@@ -15,26 +15,34 @@ traitant_IT_32:
 # fin du traitant
     iret
 
-# Copié collé de l'ass précédent
+# Gestion des interruptions user avec le traitant 49
+# Récupère les arguments passés dans la stack, puis exécute la fonction appelée
+# int32_t syscall_PIT(int32_t num, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5);
+# eax : num -> identifiant de la fonction
+# ebx : a1
+# ecx : a2
+# edx : a3
+# esi : a4
+# edi : a5
     .globl traitant_IT_49
 # debut du traitant
 traitant_IT_49:
 # sauvegarde des registres importants
-    pushl %eax
+    pushl %edi
+    pushl %esi
     pushl %edx
     pushl %ecx
-    pushl %edx
     pushl %ebx
-    pushl %esp
+    pushl %eax
 # appel a la fonction C realisant le traitant
     call syscall_PIT
 # restauration des registres importants
-    popl %esp
+    popl %eax
     popl %ebx
-    popl %edx
     popl %ecx
     popl %edx
-    popl %eax
+    popl %esi
+    popl %edi
 # fin du traitant
     iret
 

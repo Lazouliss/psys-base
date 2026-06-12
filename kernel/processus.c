@@ -395,7 +395,7 @@ void ordonnance(void) {
 
     // Lorsqu'un processus est de type user, on doit actualiser le pointeur vers la tête de sa stack kernel dans le TSS pour que les interruptions puissent fonctionner correctement
     if (new_actif->is_user) {
-        tss.esp0 = (uint32_t)(actif->kernel_stack[MAX_STACK_SIZE]);
+        tss.esp0 = (uint32_t)&actif->kernel_stack[MAX_STACK_SIZE];
         tss.ss0 = KERNEL_DS;
     }
 

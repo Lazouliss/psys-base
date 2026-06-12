@@ -2,10 +2,7 @@
 #define __SYSCALL_H__
 
 #include "stdint.h"
-
-enum syscall_num {
-    SYS_GETPID = 1
-};
+#include "../shared/syscall_numbers.h"
 
 // fonction assembleur dans traitant.S
 extern void traitant_IT_49(void);
