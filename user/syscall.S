@@ -20,31 +20,53 @@
     .macro SYSCALL1 name, number
     .globl \name
 \name:
+    pushl %ebx
+
     movl $\number, %eax
-    movl 4(%esp), %ebx
+    movl 8(%esp), %ebx
     int $49
+
+    popl %ebx
     ret
     .endm
 
     .macro SYSCALL2 name, number
     .globl \name
 \name:
+    pushl %ecx
+    pushl %ebx
+
     movl $\number, %eax
-    movl 4(%esp), %ebx
-    movl 8(%esp), %ecx
+    movl 12(%esp), %ebx
+    movl 16(%esp), %ecx
     int $49
+
+    popl %ebx
+    popl %ecx
     ret
     .endm
 
     .macro SYSCALL5 name, number
     .globl \name
 \name:
+    pushl %edi
+    pushl %esi
+    pushl %edx
+    pushl %ecx
+    pushl %ebx
+
     movl $\number, %eax
-    movl 4(%esp), %ebx
-    movl 8(%esp), %ecx
-    movl 12(%esp), %edx
-    movl 16(%esp), %esi
-    movl 20(%esp), %edi
+    movl 24(%esp), %ebx
+    movl 28(%esp), %ecx
+    movl 32(%esp), %edx
+    movl 36(%esp), %esi
+    movl 40(%esp), %edi
+
+    popl %ebx
+    popl %ecx
+    popl %edx
+    popl %esi
+    popl %edi
     int $49
     ret
     .endm
