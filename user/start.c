@@ -4,8 +4,8 @@
 
 void user_start(void)
 {
-    cons_write(1, "A");
-    cons_write(1, "B");
+    cons_write(7, "coucou ");
+    cons_write(3, "gab");
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wanalyzer-infinite-loop"
         while(1);

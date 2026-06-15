@@ -37,7 +37,7 @@ traitant_IT_49:
 # appel a la fonction C realisant le traitant
     call syscall_PIT
 # restauration des registres importants
-    popl %eax
+    addl $4, %esp
     popl %ebx
     popl %ecx
     popl %edx
