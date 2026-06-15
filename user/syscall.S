@@ -95,3 +95,5 @@ exit:
     SYSCALL1 wait_clock, SYS_WAIT_CLOCK
     SYSCALL5 start, SYS_START
     SYSCALL2 waitpid, SYS_WAITPID
+    SYSCALL2 place_curseur, SYS_PLC_CURS
+    SYSCALL0 defilement, SYS_DEFILEMENT

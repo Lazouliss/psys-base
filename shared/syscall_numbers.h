@@ -17,5 +17,7 @@
 #define SYS_WAIT_CLOCK 14
 #define SYS_START      15
 #define SYS_WAITPID    16
+#define SYS_PLC_CURS   17
+#define SYS_DEFILEMENT 18
 
 #endif

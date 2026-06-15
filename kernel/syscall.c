@@ -4,6 +4,7 @@
 #include "../shared/console.h"
 #include "horloge.h"
 #include "message.h"
+#include "screen.h"
 
 int32_t syscall_PIT(int32_t num, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5)
 {
@@ -24,6 +25,8 @@ int32_t syscall_PIT(int32_t num, int32_t a1, int32_t a2, int32_t a3, int32_t a4,
         case SYS_WAIT_CLOCK: wait_clock((uint32_t)a1); return 0;
         case SYS_START: return start((int (*)(void *))a1, (unsigned long)a2, a3, (const char *)a4, (void *)a5);
         case SYS_WAITPID: return waitpid(a1, (int *)a2);
+        case SYS_PLC_CURS: place_curseur((uint32_t)a1, (uint32_t)a2); return 0;
+        case SYS_DEFILEMENT: defilement(); return 0;
         default:
             return -1;
     }
