@@ -519,10 +519,18 @@ int32_t start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, 
             mem_free(new_processus, sizeof(processus_t));
             return -1;
         }
+        uint32_t user_stack_top = (uint32_t)new_processus->user_stack + ssize_user;
+
+        uint32_t *user_esp = (uint32_t *)user_stack_top;
+
+        // new_processus->user_stack[stack_words - 1]
+        *--user_esp = (uint32_t)arg;          // sera a esp + 4
+        // new_processus->user_stack[stack_words - 2]
+        *--user_esp = 0x01000005;             // sera a esp + 0       // adresse de retour du wrapper exit dans user/crt0.S
+
+        uint32_t esp_user = (uint32_t)user_esp;
 
         // Calcul de l'adresse de la pile utilisateur
-        uint32_t esp_user = (uint32_t)new_processus->user_stack + (uint32_t)ssize_user;
-
         new_processus->kernel_stack[MAX_STACK_SIZE - 1] = (uint32_t)USER_DS;    // SS_user
         new_processus->kernel_stack[MAX_STACK_SIZE - 2] = esp_user;             // sommet de la pile utilisateur
         new_processus->kernel_stack[MAX_STACK_SIZE - 3] = 0x202;                // EFLAGS : IF=1, IOPL=0
