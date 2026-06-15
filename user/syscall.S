@@ -61,13 +61,13 @@
     movl 32(%esp), %edx
     movl 36(%esp), %esi
     movl 40(%esp), %edi
+    int $49
 
     popl %ebx
     popl %ecx
     popl %edx
     popl %esi
     popl %edi
-    int $49
     ret
     .endm
 
