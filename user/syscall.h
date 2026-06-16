@@ -3,6 +3,7 @@
 
 #include "../shared/syscall_numbers.h"
 
+int chprio(int pid, int newprio);
 void cons_write(unsigned long size, const char *str);
 int cons_read(unsigned long const size, char str[static size]);
 void cons_echo(int on);

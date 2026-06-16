@@ -19,5 +19,6 @@
 #define SYS_WAITPID    16
 #define SYS_PLC_CURS   17
 #define SYS_DEFILEMENT 18
+#define SYS_CHPRIO     19
 
 #endif

@@ -80,6 +80,23 @@ exit:
 1:
     jmp 1b
 
+# printf() est deja implemente cote user dans shared/printf.c.
+# Il finit par appeler console_putbytes(s, len), que l'on redirige
+# vers le syscall cons_write(len, s).
+    .globl console_putbytes
+console_putbytes:
+    pushl %ecx
+    pushl %ebx
+
+    movl $SYS_CONS_WRITE, %eax
+    movl 16(%esp), %ebx
+    movl 12(%esp), %ecx
+    int $49
+
+    popl %ebx
+    popl %ecx
+    ret
+
     SYSCALL2 cons_write, SYS_CONS_WRITE
     SYSCALL0 getpid, SYS_GETPID
     SYSCALL1 getprio, SYS_GETPRIO
@@ -97,3 +114,4 @@ exit:
     SYSCALL2 waitpid, SYS_WAITPID
     SYSCALL2 place_curseur, SYS_PLC_CURS
     SYSCALL0 defilement, SYS_DEFILEMENT
+    SYSCALL2 chprio, SYS_CHPRIO

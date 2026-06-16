@@ -27,6 +27,7 @@ int32_t syscall_PIT(int32_t num, int32_t a1, int32_t a2, int32_t a3, int32_t a4,
         case SYS_WAITPID: return waitpid(a1, (int *)a2);
         case SYS_PLC_CURS: place_curseur((uint32_t)a1, (uint32_t)a2); return 0;
         case SYS_DEFILEMENT: defilement(); return 0;
+        case SYS_CHPRIO: return chprio(a1, a2);
         default:
             return -1;
     }
