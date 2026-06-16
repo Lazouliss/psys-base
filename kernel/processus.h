@@ -10,7 +10,7 @@
 #define NBPROC 30
 #define DEFAULT_PRIO 128
 #define MAX_PRIO 255
-#define USER_STACK_FRAME_SIZE (2 * sizeof(uint32_t))
+#define USER_STACK_FRAME_SIZE (3 * sizeof(uint32_t)) // On fixe la taille minimum de la stack_user qui doit contenir (le prefix, ... ,args, wrapper(exit))
 
 typedef enum
 {

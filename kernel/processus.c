@@ -89,8 +89,8 @@ static void free_process(processus_t* proc) {
     }
 
     // free dynamic stacks
-    mem_free(proc->kernel_stack, sizeof(uint32_t) * MAX_STACK_SIZE);
-    user_stack_free(proc->user_stack, proc->user_stack_size);
+    if (proc->kernel_stack) mem_free(proc->kernel_stack, sizeof(uint32_t) * MAX_STACK_SIZE);
+    if (proc->user_stack) user_stack_free(proc->user_stack, proc->user_stack_size);
 
     processus_tab[pid] = NULL;
     mem_free(proc, sizeof(processus_t));
@@ -513,53 +513,40 @@ int32_t start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, 
     new_processus->registers[4] = 0;
     new_processus->prio = prio;
 
-    if (ssize_user > 0) {
-        // Initialisation du processus utilisateur
-        new_processus->is_user = true;
-        uint32_t alloc_size = ssize_user + USER_STACK_FRAME_SIZE;
-        new_processus->user_stack_size = alloc_size;
-        new_processus->user_stack = user_stack_alloc(alloc_size);
-        if (!new_processus->user_stack) {
-            mem_free(new_processus->kernel_stack, sizeof(uint32_t) * MAX_STACK_SIZE);
-            mem_free(new_processus, sizeof(processus_t));
-            return -1;
-        }
-        uint32_t user_stack_top = (uint32_t)new_processus->user_stack + alloc_size;
+    // Initialisation du processus utilisateur
+    new_processus->is_user = true;
+    uint32_t alloc_size = ssize_user + USER_STACK_FRAME_SIZE;
+    if (ssize_user > alloc_size) { return -1; }
 
-        uint32_t *user_esp = (uint32_t *)user_stack_top;
-
-        // new_processus->user_stack[stack_words - 1]
-        *--user_esp = (uint32_t)arg;          // sera a esp + 4
-        // new_processus->user_stack[stack_words - 2]
-        *--user_esp = 0x01000005;             // sera a esp + 0       // adresse de retour du wrapper exit dans user/crt0.S
-
-        uint32_t esp_user = (uint32_t)user_esp;
-
-        // Calcul de l'adresse de la pile utilisateur
-        new_processus->kernel_stack[MAX_STACK_SIZE - 1] = (uint32_t)USER_DS;    // SS_user
-        new_processus->kernel_stack[MAX_STACK_SIZE - 2] = esp_user;             // sommet de la pile utilisateur
-        new_processus->kernel_stack[MAX_STACK_SIZE - 3] = 0x202;                // EFLAGS : IF=1, IOPL=0
-        new_processus->kernel_stack[MAX_STACK_SIZE - 4] = (uint32_t)USER_CS;    // CS_user
-        new_processus->kernel_stack[MAX_STACK_SIZE - 5] = (uint32_t)pt_func;    // EIP_user (adresse d'entrée du code user)
-        new_processus->kernel_stack[MAX_STACK_SIZE - 6] = (uint32_t)return_to_user; // adresse de retour pour ctx_sw
-
-        // pointeur vers le wrapper return_to_user (iret)
-        new_processus->registers[1] = (uint32_t)&new_processus->kernel_stack[MAX_STACK_SIZE - 6];
-
-    } else {
-        // Initialisation du processus kernel
-        new_processus->is_user = false;
-        new_processus->user_stack_size = 0;
-        new_processus->user_stack = NULL;
-
-        // Placer l'adresse de code en sommet de pile et initialiser %esp
-        new_processus->kernel_stack[MAX_STACK_SIZE - 4] = (uint32_t)run_process_exec;
-        new_processus->kernel_stack[MAX_STACK_SIZE - 2] = (uint32_t)pt_func;
-        new_processus->kernel_stack[MAX_STACK_SIZE - 1] = (uint32_t)arg;
-
-        new_processus->registers[1] = (uint32_t)&new_processus->kernel_stack[MAX_STACK_SIZE - 4]; // %esp -> wrapper d'exécution
-        new_processus->registers[2] = (uint32_t)&new_processus->kernel_stack[MAX_STACK_SIZE - 3]; // %ebp -> valeur de retour du wrapper
+    new_processus->user_stack_size = alloc_size;
+    new_processus->user_stack = user_stack_alloc(alloc_size);
+    if (!new_processus->user_stack) {
+        mem_free(new_processus->kernel_stack, sizeof(uint32_t) * MAX_STACK_SIZE);
+        mem_free(new_processus, sizeof(processus_t));
+        return -1;
     }
+    uint32_t user_stack_top = (uint32_t)new_processus->user_stack + alloc_size;
+
+    uint32_t *user_esp = (uint32_t *)user_stack_top;
+
+    // new_processus->user_stack[stack_words - 1]
+    *--user_esp = (uint32_t)arg;          // sera a esp + 4
+    // new_processus->user_stack[stack_words - 2]
+    *--user_esp = 0x01000005;             // sera a esp + 0       // adresse de retour du wrapper exit dans user/crt0.S
+
+    uint32_t esp_user = (uint32_t)user_esp;
+
+    // Calcul de l'adresse de la pile utilisateur
+    new_processus->kernel_stack[MAX_STACK_SIZE - 1] = (uint32_t)USER_DS;    // SS_user
+    new_processus->kernel_stack[MAX_STACK_SIZE - 2] = esp_user;             // sommet de la pile utilisateur
+    new_processus->kernel_stack[MAX_STACK_SIZE - 3] = 0x202;                // EFLAGS : IF=1, IOPL=0
+    new_processus->kernel_stack[MAX_STACK_SIZE - 4] = (uint32_t)USER_CS;    // CS_user
+    new_processus->kernel_stack[MAX_STACK_SIZE - 5] = (uint32_t)pt_func;    // EIP_user (adresse d'entrée du code user)
+    new_processus->kernel_stack[MAX_STACK_SIZE - 6] = (uint32_t)return_to_user; // adresse de retour pour ctx_sw
+
+    // pointeur vers le wrapper return_to_user (iret)
+    new_processus->registers[1] = (uint32_t)&new_processus->kernel_stack[MAX_STACK_SIZE - 6];
+
 
     // Filiation
     new_processus->p_pid = actif->pid;
