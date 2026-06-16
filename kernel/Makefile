@@ -14,6 +14,7 @@ LD := i686-elf-ld
 AR := i686-elf-ar
 DEP := i686-elf-gcc
 OBJCOPY := i686-elf-objcopy
+GRUB_MKRESCUE := i686-elf-grub-mkrescue
 else
 CC := gcc-14
 AS := gcc-14
@@ -21,6 +22,7 @@ LD := ld
 AR := ar
 DEP := gcc-14
 OBJCOPY := objcopy
+GRUB_MKRESCUE := grub-mkrescue
 endif
 MKDIR := mkdir
 CP := cp
@@ -104,14 +106,17 @@ cd.iso: kernel.bin
 	mkdir -p iso/boot/grub
 	cp kernel.bin iso/boot
 	printf 'set timeout=0\nset default=0\nmenuentry "kernel.bin" {\n multiboot /boot/kernel.bin\n boot\n}' > iso/boot/grub/grub.cfg
-	grub-mkrescue -o cd.iso iso
+	$(GRUB_MKRESCUE) -o cd.iso iso
 	rm -r iso/
 
 ### lancement de bochs: il faut faire [6] Begin Smulation puis 'cont'
 ### pour commencer la simulation avec gdbstub activé comme qemu
 .PHONY: bochs
 bochs: cd.iso
-	bochs -q 'memory: guest=256,host=256' 'boot: cdrom' 'ata0-master: type=cdrom, path="cd.iso", status=inserted' 'gdbstub: enabled=1, port=1234, text_base=0, data_base=0, bss_base=0'
+	bochs -q 'display_library: sdl2' 'memory: guest=256,host=256' 'boot: cdrom' 'ata0-master: type=cdrom, path="cd.iso", status=inserted'
+
+bochs-debug: cd.iso
+	bochs -q 'display_library: sdl2' 'memory: guest=256,host=256' 'boot: cdrom' 'ata0-master: type=cdrom, path="cd.iso", status=inserted' 'gdbstub: enabled=1, port=1234, text_base=0, data_base=0, bss_base=0'
 
 ### Generic rules ###
 $(OUTPUT)/%.d: %.c | $(OUTPUT)

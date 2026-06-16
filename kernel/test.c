@@ -2291,135 +2291,135 @@ test17(void)
 	printf(".\n");
 }
 
-// /*******************************************************************************
-//  * Test 18
-//  *
-//  * Amusement : piratage !
-//  ******************************************************************************/
-// static char callhack[] = { 0xcd, 0x32, 0xc3 };
+/*******************************************************************************
+ * Test 18
+ *
+ * Amusement : piratage !
+ ******************************************************************************/
+static char callhack[] = { 0xcd, 0x32, 0xc3 };
 
-// __asm__(
-// ".text\n"
-// ".globl __hacking\n"
-// "__hacking:\n"
+__asm__(
+".text\n"
+".globl __hacking\n"
+"__hacking:\n"
 
-// "pushal\n"
-// "pushl %ds\n"
-// "pushl %es\n"
-// "movl $0x18,%eax\n"
-// "movl %eax,%ds\n"
-// "movl %eax,%es\n"
-// "cld\n"
-// "call __hacking_c\n"
-// "popl %es\n"
-// "popl %ds\n"
-// "popal\n"
-// "iret\n"
-// );
+"pushal\n"
+"pushl %ds\n"
+"pushl %es\n"
+"movl $0x18,%eax\n"
+"movl %eax,%ds\n"
+"movl %eax,%es\n"
+"cld\n"
+"call __hacking_c\n"
+"popl %es\n"
+"popl %ds\n"
+"popal\n"
+"iret\n"
+);
 
-// extern void
-// __hacking(void);
+extern void
+__hacking(void);
 
-// static __inline__ void 
-// outb(unsigned char value, unsigned short port)
-// {
-// 	__asm__ __volatile__("outb %0, %1" : : "a" (value), "Nd" (port));
-// }
+static __inline__ void 
+outb(unsigned char value, unsigned short port)
+{
+	__asm__ __volatile__("outb %0, %1" : : "a" (value), "Nd" (port));
+}
 
-// static __inline__ unsigned char 
-// inb(unsigned short port)
-// {
-// 	unsigned char rega;
-// 	__asm__ __volatile__("inb %1,%0" : "=a" (rega) : "Nd" (port));
-// 	return rega;
-// }
+static __inline__ unsigned char 
+inb(unsigned short port)
+{
+	unsigned char rega;
+	__asm__ __volatile__("inb %1,%0" : "=a" (rega) : "Nd" (port));
+	return rega;
+}
 
-// static int
-// getpos(void)
-// {
-// 	int pos;
-// 	outb(0x0f, 0x3d4);
-// 	pos = inb(0x3d4 + 1);
-// 	outb(0x0e, 0x3d4);
-// 	pos += inb(0x3d4 + 1) << 8;
-// 	return pos;
-// }
+static int
+getpos(void)
+{
+	int pos;
+	outb(0x0f, 0x3d4);
+	pos = inb(0x3d4 + 1);
+	outb(0x0e, 0x3d4);
+	pos += inb(0x3d4 + 1) << 8;
+	return pos;
+}
 
-// static int firsttime = 1;
+static int firsttime = 1;
 
-// void
-// __hacking_c(void)
-// {
-// 	static int pos;
-// 	if (firsttime) {
-// 		firsttime = 0;
-// 		pos = getpos();
-// 	} else {
-// 		int pos2 = getpos();
-// 		char *str = "          Kernel hacked ! :P          ";
-// 		short *ptr = (short *)0xb8000;
-// 		int p = pos;
-// 		while (p > pos2) p-= 80;
-// 		if ((p < 0) || (p >= 80 * 24)) p = 80 * 23;
-// 		ptr += p;
-// 		while (*str) {
-// 			*ptr++ = ((128 + 4 * 16 + 15) << 8) + *str++;
-// 		}
-// 	}
-// }
+void
+__hacking_c(void)
+{
+	static int pos;
+	if (firsttime) {
+		firsttime = 0;
+		pos = getpos();
+	} else {
+		int pos2 = getpos();
+		char *str = "          Kernel hacked ! :P          ";
+		short *ptr = (short *)0xb8000;
+		int p = pos;
+		while (p > pos2) p-= 80;
+		if ((p < 0) || (p >= 80 * 24)) p = 80 * 23;
+		ptr += p;
+		while (*str) {
+			*ptr++ = ((128 + 4 * 16 + 15) << 8) + *str++;
+		}
+	}
+}
 
-// static void
-// do_hack(void)
-// {
-// 	firsttime = 1;
-// 	((void (*)(void))callhack)();
-// 	printf("nok.\n");
-// 	((void (*)(void))callhack)();
-// }
+static void
+do_hack(void)
+{
+	firsttime = 1;
+	((void (*)(void))callhack)();
+	printf("nok.\n");
+	((void (*)(void))callhack)();
+}
 
-// static int
-// proc_18_1(void *args)
-// {
-// 	printf("1 ");
-// 	return (int)args;
-// }
+static int
+proc_18_1(void *args)
+{
+	printf("1 ");
+	return (int)args;
+}
 
-// static int
-// proc_18_2(void *args)
-// {
-// 	printf("2 ");
-// 	return (int)args;
-// }
+static int
+proc_18_2(void *args)
+{
+	printf("2 ");
+	return (int)args;
+}
 
-// void
-// test18(void)
-// {
-// 	unsigned long a = (unsigned long)__hacking;
-// 	unsigned long a1 = 0x100000 + (a & 0xffff);
-// 	unsigned long a2 = (a & 0xffff0000) + 0xee00;
-// 	int pid1, pid2;
-// 	int cs;
+void
+test18(void)
+{
+	unsigned long a = (unsigned long)__hacking;
+	unsigned long a1 = 0x100000 + (a & 0xffff);
+	unsigned long a2 = (a & 0xffff0000) + 0xee00;
+	int pid1, pid2;
+	int cs;
 
-// 	__asm__ volatile ("movl %%cs,%%eax":"=a" (cs));
-// 	if ((cs & 3) == 0) {
-// 		printf("This test can not work at kernel level.\n");
-// 		return;
-// 	}
-// 	pid1 = start(proc_18_1, 4000, 127, "proc_18_1", (void *)a1);
-// 	pid2 = start(proc_18_2, 4000, 126, "proc_18_2", (void *)a2);
-// 	assert(pid1 > 0);
-// 	assert(pid2 > 0);
-// 	if ((waitpid(pid1, (int *)0x1190) == pid1) &&
-// 		(waitpid(pid2, (int *)0x1194) == pid2)) {
-// 		do_hack();
-// 		return;
-// 	}
-// 	waitpid(-1, 0);
-// 	waitpid(-1, 0);
-// 	cons_write(50, (char *)0x100000);
-// 	assert(start(dummy2, 4000, 100, (void *)0x100000, 0) < 0);
-// 	printf("3.\n");
-// }
+	__asm__ volatile ("movl %%cs,%%eax":"=a" (cs));
+	if ((cs & 3) == 0) {
+		printf("This test can not work at kernel level.\n");
+		return;
+	}
+	pid1 = start(proc_18_1, 4000, 127, "proc_18_1", (void *)a1);
+	pid2 = start(proc_18_2, 4000, 126, "proc_18_2", (void *)a2);
+	assert(pid1 > 0);
+	assert(pid2 > 0);
+	if ((waitpid(pid1, (int *)0x1190) == pid1) &&
+		(waitpid(pid2, (int *)0x1194) == pid2)) {
+		do_hack();
+		return;
+	}
+	waitpid(-1, 0);
+	waitpid(-1, 0);
+	cons_write(50, (char *)0x100000);
+	assert(start(dummy2, 4000, 100, (void *)0x100000, 0) < 0);
+	printf("3.\n");
+}
 
 // /*******************************************************************************
 //  * Test 19
@@ -2486,189 +2486,195 @@ test17(void)
 // 	printf(" 6.\n");
 // }
 
-// /*******************************************************************************
-//  * Test 20
-//  *
-//  * Le repas des philosophes.
-//  ******************************************************************************/
-// static char f[NR_PHILO]; /* tableau des fourchettes, contient soit 1 soit 0 selon si elle
-// 			    est utilisee ou non */
+void
+test19(void)
+{
+	printf("skipped\n");
+}
 
-// static char bloque[NR_PHILO]; /* memorise l'etat du philosophe, contient 1 ou 0 selon que le philosophe
-// 				 est en attente d'une fourchette ou non */
+/*******************************************************************************
+ * Test 20
+ *
+ * Le repas des philosophes.
+ ******************************************************************************/
+static char f[NR_PHILO]; /* tableau des fourchettes, contient soit 1 soit 0 selon si elle
+			    est utilisee ou non */
 
-// static struct sem mutex_philo; /* exclusion mutuelle */
-// static struct sem s[NR_PHILO]; /* un semaphore par philosophe */
-// static int etat[NR_PHILO];
+static char bloque[NR_PHILO]; /* memorise l'etat du philosophe, contient 1 ou 0 selon que le philosophe
+				 est en attente d'une fourchette ou non */
 
-// static void
-// affiche_etat()
-// {
-// 	int i;
-// 	printf("%c", 13);
-// 	for (i=0; i<NR_PHILO; i++) {
-// 		unsigned long c;
-// 		switch (etat[i]) {
-// 		case 'm':
-// 			c = 2;
-// 			break;
-// 		default:
-// 			c = 4;
-// 		}
-// 		assert(c %2 == 0); // utilisation de c pour le compilo
-// 		printf("%c", etat[i]);
-// 	}
-// }
+static struct sem mutex_philo; /* exclusion mutuelle */
+static struct sem s[NR_PHILO]; /* un semaphore par philosophe */
+static int etat[NR_PHILO];
 
-// static void
-// waitloop(void)
-// {
-// 	int j;
-// 	for (j = 0; j < 5000; j++) {
-// 		int l;
-// 		test_it();
-// 		for (l = 0; l < 5000; l++);
-// 	}
-// }
+static void
+affiche_etat()
+{
+	int i;
+	printf("%c", 13);
+	for (i=0; i<NR_PHILO; i++) {
+		unsigned long c;
+		switch (etat[i]) {
+		case 'm':
+			c = 2;
+			break;
+		default:
+			c = 4;
+		}
+		assert(c %2 == 0); // utilisation de c pour le compilo
+		printf("%c", etat[i]);
+	}
+}
 
-// static void
-// penser(long i)
-// {
-// 	xwait(&mutex_philo); /* DEBUT SC */
-// 	etat[i] = 'p';
-// 	affiche_etat();
-// 	xsignal(&mutex_philo); /* Fin SC */
-// 	waitloop();
-// 	xwait(&mutex_philo); /* DEBUT SC */
-// 	etat[i] = '-';
-// 	affiche_etat();
-// 	xsignal(&mutex_philo); /* Fin SC */
-// }
+static void
+waitloop(void)
+{
+	int j;
+	for (j = 0; j < 5000; j++) {
+		int l;
+		test_it();
+		for (l = 0; l < 5000; l++);
+	}
+}
 
-// static void
-// manger(long i)
-// {
-// 	xwait(&mutex_philo); /* DEBUT SC */
-// 	etat[i] = 'm';
-// 	affiche_etat();
-// 	xsignal(&mutex_philo); /* Fin SC */
-// 	waitloop();
-// 	xwait(&mutex_philo); /* DEBUT SC */
-// 	etat[i] = '-';
-// 	affiche_etat();
-// 	xsignal(&mutex_philo); /* Fin SC */
-// }
+static void
+penser(long i)
+{
+	xwait(&mutex_philo); /* DEBUT SC */
+	etat[i] = 'p';
+	affiche_etat();
+	xsignal(&mutex_philo); /* Fin SC */
+	waitloop();
+	xwait(&mutex_philo); /* DEBUT SC */
+	etat[i] = '-';
+	affiche_etat();
+	xsignal(&mutex_philo); /* Fin SC */
+}
 
-// static int
-// test(int i)
-// {
-// 	/* les fourchettes du philosophe i sont elles libres ? */
-// 	return ((!f[i] && (!f[(i + 1) % NR_PHILO])));
-// }
+static void
+manger(long i)
+{
+	xwait(&mutex_philo); /* DEBUT SC */
+	etat[i] = 'm';
+	affiche_etat();
+	xsignal(&mutex_philo); /* Fin SC */
+	waitloop();
+	xwait(&mutex_philo); /* DEBUT SC */
+	etat[i] = '-';
+	affiche_etat();
+	xsignal(&mutex_philo); /* Fin SC */
+}
 
-// static void
-// prendre_fourchettes(int i)
-// {
-// 	/* le philosophe i prend des fourchettes */
+static int
+test(int i)
+{
+	/* les fourchettes du philosophe i sont elles libres ? */
+	return ((!f[i] && (!f[(i + 1) % NR_PHILO])));
+}
 
-// 	xwait(&mutex_philo); /* Debut SC */
+static void
+prendre_fourchettes(int i)
+{
+	/* le philosophe i prend des fourchettes */
 
-// 	if (test(i)) {  /* on tente de prendre 2 fourchette */
-// 		f[i] = 1;
-// 		f[(i + 1) % NR_PHILO] = 1;
-// 		xsignal(&s[i]);
-// 	} else
-// 		bloque[i] = 1;
+	xwait(&mutex_philo); /* Debut SC */
 
-// 	xsignal(&mutex_philo); /* FIN SC */
-// 	xwait(&s[i]); /* on attend au cas o on ne puisse pas prendre 2 fourchettes */
-// }
+	if (test(i)) {  /* on tente de prendre 2 fourchette */
+		f[i] = 1;
+		f[(i + 1) % NR_PHILO] = 1;
+		xsignal(&s[i]);
+	} else
+		bloque[i] = 1;
 
-// static void
-// poser_fourchettes(int i)
-// {
+	xsignal(&mutex_philo); /* FIN SC */
+	xwait(&s[i]); /* on attend au cas o on ne puisse pas prendre 2 fourchettes */
+}
 
-// 	xwait(&mutex_philo); /* DEBUT SC */
+static void
+poser_fourchettes(int i)
+{
 
-// 	if ((bloque[(i + NR_PHILO - 1) % NR_PHILO]) && (!f[(i + NR_PHILO - 1) % NR_PHILO])) {
-// 		f[(i + NR_PHILO - 1) % NR_PHILO] = 1;
-// 		bloque[(i + NR_PHILO - 1) % NR_PHILO] = 0;
-// 		xsignal(&s[(i + NR_PHILO - 1) % NR_PHILO]);
-// 	} else
-// 		f[i] = 0;
+	xwait(&mutex_philo); /* DEBUT SC */
 
-// 	if ((bloque[(i + 1) % NR_PHILO]) && (!f[(i + 2) % NR_PHILO])) {
-// 		f[(i + 2) % NR_PHILO] = 1;
-// 		bloque[(i + 1) % NR_PHILO] = 0;
-// 		xsignal(&s[(i + 1) % NR_PHILO]);
-// 	} else
-// 		f[(i + 1) % NR_PHILO] = 0;
+	if ((bloque[(i + NR_PHILO - 1) % NR_PHILO]) && (!f[(i + NR_PHILO - 1) % NR_PHILO])) {
+		f[(i + NR_PHILO - 1) % NR_PHILO] = 1;
+		bloque[(i + NR_PHILO - 1) % NR_PHILO] = 0;
+		xsignal(&s[(i + NR_PHILO - 1) % NR_PHILO]);
+	} else
+		f[i] = 0;
 
-// 	xsignal(&mutex_philo); /* Fin SC */
-// }
+	if ((bloque[(i + 1) % NR_PHILO]) && (!f[(i + 2) % NR_PHILO])) {
+		f[(i + 2) % NR_PHILO] = 1;
+		bloque[(i + 1) % NR_PHILO] = 0;
+		xsignal(&s[(i + 1) % NR_PHILO]);
+	} else
+		f[(i + 1) % NR_PHILO] = 0;
 
-// static int
-// philosophe(void *arg)
-// {
-// 	/* comportement d'un seul philosophe */
-// 	int i = (int) arg;
-// 	int k;
+	xsignal(&mutex_philo); /* Fin SC */
+}
 
-// 	for (k = 0; k < 6; k++) {
-// 		prendre_fourchettes(i); /* prend 2 fourchettes ou se bloque */
-// 		manger(i); /* le philosophe mange */
-// 		poser_fourchettes(i); /* pose 2 fourchettes */
-// 		penser(i); /* le philosophe pense */
-// 	}
-// 	xwait(&mutex_philo); /* DEBUT SC */
-// 	etat[i] = '-';
-// 	affiche_etat();
-// 	xsignal(&mutex_philo); /* Fin SC */
-// 	return 0;
-// }
+static int
+philosophe(void *arg)
+{
+	/* comportement d'un seul philosophe */
+	int i = (int) arg;
+	int k;
 
-// static int
-// launch_philo([[maybe_unused]] void *arg)
-// {
+	for (k = 0; k < 6; k++) {
+		prendre_fourchettes(i); /* prend 2 fourchettes ou se bloque */
+		manger(i); /* le philosophe mange */
+		poser_fourchettes(i); /* pose 2 fourchettes */
+		penser(i); /* le philosophe pense */
+	}
+	xwait(&mutex_philo); /* DEBUT SC */
+	etat[i] = '-';
+	affiche_etat();
+	xsignal(&mutex_philo); /* Fin SC */
+	return 0;
+}
 
-// 	int i, pid;
+static int
+launch_philo([[maybe_unused]] void *arg)
+{
 
-// 	for (i = 0; i < NR_PHILO; i++) {
-// 		pid = start(philosophe, 4000, 192, "philosophe", (void *) i);
-// 		assert(pid > 0);
-// 	}
-// 	return 0;
+	int i, pid;
 
-// }
+	for (i = 0; i < NR_PHILO; i++) {
+		pid = start(philosophe, 4000, 192, "philosophe", (void *) i);
+		assert(pid > 0);
+	}
+	return 0;
 
-// void
-// test20(void)
-// {
-// 	int j, pid;
+}
 
-// 	xscreate(&mutex_philo); /* semaphore d'exclusion mutuelle */
-// 	xsignal(&mutex_philo);
-// 	for (j = 0; j < NR_PHILO; j++) {
-// 		xscreate(s + j); /* semaphore de bloquage des philosophes */
-// 		f[j] = 0;
-// 		bloque[j] = 0;
-// 		etat[j] = '-';
-// 	}
+void
+test20(void)
+{
+	int j, pid;
 
-// 	printf("\n");
-// 	pid = start(launch_philo, 4000, 193, "Lanceur philosophes", 0);
-// 	assert(pid > 0);
-// 	assert(waitpid(pid, 0) == pid);
-// 	printf("\n");
-// 	xsdelete(&mutex_philo);
-// 	for (j = 0; j < NR_PHILO; j++) {
-// 		xsdelete(s + j);
-// 	}
-// }
+	xscreate(&mutex_philo); /* semaphore d'exclusion mutuelle */
+	xsignal(&mutex_philo);
+	for (j = 0; j < NR_PHILO; j++) {
+		xscreate(s + j); /* semaphore de bloquage des philosophes */
+		f[j] = 0;
+		bloque[j] = 0;
+		etat[j] = '-';
+	}
 
-// /*******************************************************************************
-//  * Fin des tests
-//  ******************************************************************************/
+	printf("\n");
+	pid = start(launch_philo, 4000, 193, "Lanceur philosophes", 0);
+	assert(pid > 0);
+	assert(waitpid(pid, 0) == pid);
+	printf("\n");
+	xsdelete(&mutex_philo);
+	for (j = 0; j < NR_PHILO; j++) {
+		xsdelete(s + j);
+	}
+}
+
+/*******************************************************************************
+ * Fin des tests
+ ******************************************************************************/
 
 // static void auto_test(void);
 
@@ -2699,9 +2705,9 @@ static struct {
 	{"15", test15},
 	{"16", test16},
 	{"17", test17},
-	// {"18", test18},
-	// {"19", test19},
-	// {"20", test20},
+	{"18", test18},
+	{"19", test19},
+	{"20", test20},
 	// {"si", sys_info},
 	// {"a", auto_test},
 	// {"auto", auto_test},

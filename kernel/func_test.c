@@ -3,6 +3,7 @@
 #include "horloge.h"
 
 int test_run(int n);
+int test20();
 
 int fact(int n)
 {
@@ -97,4 +98,35 @@ int proc7(void*) {
   wait_clock(5);
 
   return 7;
+}
+
+void simple_test(void*) {
+	int i;
+	// call_debugger(); useless with qemu -s -S
+	i = 10;
+	i = fact(i);
+
+	/************************/
+	/* Tests simples printf */
+	/************************/
+	//efface_ecran();
+	// Supprime le contenu de l'écran de base
+	printf("\f");
+	// Affiche un simple texte qui disparaitra
+	printf("Hello, World!\n");
+	// Affiche le résultat contenu dans la variable i
+	printf("10! = %d\n", i);
+	// Test tabulation
+	printf("tab\tulation\n");
+	// Test defilement()
+	printf("ééé\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nderniere lignes");
+	// Test place_curseur() au milieu de l'écran
+	place_curseur(12, 40);
+	// Reviens au début de la ligne, puis écrit 5 caractères, et place le curseur SUR le dernier caractère
+	printf("\r klfd\b");
+	// Nettoyage de tout l'écran
+	printf("\f");
+
+	// démasquage des interruptions externes
+    //sti(); // Inutile avec l'ajout des processus dynamiques
 }
