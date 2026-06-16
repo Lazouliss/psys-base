@@ -6,9 +6,16 @@ traitant_IT_32:
     pushl %eax
     pushl %edx
     pushl %ecx
+    pushl %ds
+    pushl %es
+    movw $0x18, %ax
+    movw %ax, %ds
+    movw %ax, %es
 # appel a la fonction C realisant le traitant
     call tic_PIT
 # restauration des registres importants
+    popl %es
+    popl %ds
     popl %ecx
     popl %edx
     popl %eax
@@ -28,12 +35,17 @@ traitant_IT_32:
 # debut du traitant
 traitant_IT_49:
 # sauvegarde des registres importants
+    pushl %ds
+    pushl %es
     pushl %edi
     pushl %esi
     pushl %edx
     pushl %ecx
     pushl %ebx
     pushl %eax
+    movw $0x18, %ax
+    movw %ax, %ds
+    movw %ax, %es
 # appel a la fonction C realisant le traitant
     call syscall_PIT
 # restauration des registres importants
@@ -43,6 +55,8 @@ traitant_IT_49:
     popl %edx
     popl %esi
     popl %edi
+    popl %es
+    popl %ds
 # fin du traitant
     iret
 
@@ -55,6 +69,9 @@ traitant_IT_49:
 
     .globl return_to_user
 return_to_user:
+    movw $0x4b, %ax
+    movw %ax, %ds
+    movw %ax, %es
     iret
 
 
