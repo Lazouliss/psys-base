@@ -22,6 +22,7 @@ int proc6(void*);
 int proc7(void*);
 int proc8(void*);
 
+void simple_test(void*);
 int run_test_proc(int max_test);
 
 #endif

@@ -26,6 +26,14 @@ entry:
 	/* Call the first user process */
 	jmp	user_start
 
+# Fonction wrapper du exit (retourne la valeur résultante d'un start)
+    .globl user_ret_from_start
+user_ret_from_start:
+    pushl %eax
+    call exit
+1:
+    jmp 1b
+
 /* Unimplemented functions.
 You have to implement them it in ".c" files. As these symbols are marked as
 "weak", they will no more be used as soon as you write your implementations.

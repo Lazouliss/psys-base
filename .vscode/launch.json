@@ -22,6 +22,11 @@
                 "description": "Set Disassembly Flavor to Intel",
                 "text": "-gdb-set disassembly-flavor intel",
                 "ignoreFailures": true
+            },
+            {
+                "description": "Load user program symbols",
+                "text": "add-symbol-file ${workspaceFolder}/user/user.debug 0x1000000",
+                "ignoreFailures": true
             }
         ]
     }
