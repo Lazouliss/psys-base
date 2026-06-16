@@ -88,6 +88,10 @@ static void free_process(processus_t* proc) {
         }
     }
 
+    // free dynamic stacks
+    mem_free(proc->kernel_stack, sizeof(uint32_t) * MAX_STACK_SIZE);
+    user_stack_free(proc->user_stack, proc->user_stack_size);
+
     processus_tab[pid] = NULL;
     mem_free(proc, sizeof(processus_t));
 }
@@ -471,7 +475,7 @@ int32_t start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, 
     // Taille de pile maximale en octets
     const unsigned long max_ssize = (unsigned long)MAX_STACK_SIZE * sizeof(uint32_t);
     if (prio <= 0 || prio >= MAX_PRIO) {return -1;}
-    if (ssize_user > max_ssize) {return -1;}
+    if (ssize_user > max_ssize) { return -1; }
 
     bool space_found = false;
     // Calcul du prochain PID disponible
@@ -489,7 +493,7 @@ int32_t start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, 
     if (!space_found) { return -1; }
 
     processus_t* new_processus = mem_alloc(sizeof(processus_t));
-    if (!new_processus) {return -1;}
+    if (!new_processus) { return -1; }
 
     // Allocation de la pile kernel / utilisateur
     new_processus->kernel_stack = mem_alloc(sizeof(uint32_t) * MAX_STACK_SIZE);
