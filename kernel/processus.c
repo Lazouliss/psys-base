@@ -516,14 +516,15 @@ int32_t start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, 
     if (ssize_user > 0) {
         // Initialisation du processus utilisateur
         new_processus->is_user = true;
-        new_processus->user_stack_size = ssize_user;
-        new_processus->user_stack = user_stack_alloc(ssize_user);
+        uint32_t alloc_size = ssize_user + USER_STACK_FRAME_SIZE;
+        new_processus->user_stack_size = alloc_size;
+        new_processus->user_stack = user_stack_alloc(alloc_size);
         if (!new_processus->user_stack) {
             mem_free(new_processus->kernel_stack, sizeof(uint32_t) * MAX_STACK_SIZE);
             mem_free(new_processus, sizeof(processus_t));
             return -1;
         }
-        uint32_t user_stack_top = (uint32_t)new_processus->user_stack + ssize_user;
+        uint32_t user_stack_top = (uint32_t)new_processus->user_stack + alloc_size;
 
         uint32_t *user_esp = (uint32_t *)user_stack_top;
 
