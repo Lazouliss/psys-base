@@ -22,7 +22,11 @@ void kernel_start(void)
 	processus_t* idle_process = mem_alloc(sizeof(processus_t));
 	idle_process->pid = 0;
 	idle_process->p_pid = -1;
-	idle_process->name = "idle";
+	idle_process->name[0] = 'i';
+	idle_process->name[1] = 'd';
+	idle_process->name[2] = 'l';
+	idle_process->name[3] = 'e';
+	idle_process->name[4] = '\0';
 	idle_process->state = ELU;
 	idle_process->prio = 0;
 	// idle utilise directement la pile noyau, pas besoin d'initialiser regs

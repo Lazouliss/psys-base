@@ -7,6 +7,7 @@
 #include "user_stack_mem.h"
 #include "processor_structs.h"
 #include "syscall.h"
+#include "string.h"
 
 // initialisation de la table des processus
 link queue_process = LIST_HEAD_INIT(queue_process);
@@ -476,6 +477,7 @@ int32_t start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, 
     const unsigned long max_ssize = (unsigned long)MAX_STACK_SIZE * sizeof(uint32_t);
     if (prio <= 0 || prio >= MAX_PRIO) {return -1;}
     if (ssize_user > max_ssize) { return -1; }
+    if(!name) { return -1; }
 
     bool space_found = false;
     // Calcul du prochain PID disponible
@@ -504,7 +506,8 @@ int32_t start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, 
 
     // Initialisation des paramètres commun du processus
     new_processus->pid = last_pid;
-    new_processus->name = name;
+    strncpy(new_processus->name, name, NAME_MAX_LEN-1);
+    new_processus->name[NAME_MAX_LEN-1] = '\0';
     new_processus->state = ACTIVABLE;
     new_processus->registers[0] = 0;
     new_processus->registers[1] = 0;

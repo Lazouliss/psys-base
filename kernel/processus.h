@@ -11,6 +11,7 @@
 #define DEFAULT_PRIO 128
 #define MAX_PRIO 255
 #define USER_STACK_FRAME_SIZE (3 * sizeof(uint32_t)) // On fixe la taille minimum de la stack_user qui doit contenir (le prefix, ... ,args, wrapper(exit))
+#define NAME_MAX_LEN 32
 
 typedef enum
 {
@@ -36,7 +37,7 @@ typedef struct processus
     int32_t blocking_fid;           // le fid de la file de message sur laquelle il est bloqué ou -1 si le processus était bloqué et que fid a été pdelete
     int message;                    // message reçu par le processus
 
-    const char* name;
+    char name[NAME_MAX_LEN];
     states state;                   // Process state (0: ready / activable, 1: running / élu, 2: sleeping / endormi)
     uint32_t registers[5];          // CPU registers (ebx, esp, ebp, esi, edi)
     uint32_t* kernel_stack;         // pile d'execution des processus kernel
