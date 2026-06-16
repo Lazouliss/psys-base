@@ -10,7 +10,7 @@ qemu: all
 qemu-gdb: all
 	qemu-system-i386 -machine q35 -m 256 -kernel kernel/kernel.bin -s -S
 
-bochs: 
+bochs: all
 	$(MAKE) -C kernel/ bochs
 
 bochs-debug: 
