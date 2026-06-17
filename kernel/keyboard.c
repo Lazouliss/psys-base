@@ -73,7 +73,11 @@ void keyboard_data(char *str)
         buffer_push(*str);
 
         if (echo_enabled) {
-            cons_write(1, str);
+            if (*str == '\r') {
+                cons_write(1, "\n");
+            } else {
+                cons_write(1, str);
+            }
         }
 
         str++;
