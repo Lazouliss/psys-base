@@ -14,6 +14,7 @@ link queue_process = LIST_HEAD_INIT(queue_process);
 link queue_process_sleeping = LIST_HEAD_INIT(queue_process_sleeping);
 link queue_process_zombie = LIST_HEAD_INIT(queue_process_zombie);
 link queue_process_blocked = LIST_HEAD_INIT(queue_process_blocked);
+link queue_process_blocked_IO = LIST_HEAD_INIT(queue_process_blocked_IO);
 
 processus_t* processus_tab[NBPROC];
 processus_t* actif;
@@ -380,6 +381,10 @@ void ordonnance(void) {
             case BLOCK_MSG_SND:
                 // si actif est BLOCK_MSG_SND on le place dans la queue des sender
                 queue_add(actif, &message_tab[actif->blocking_fid]->sender_queue, processus_t, link, prio);
+                break;
+            case BLOCK_IO:
+                // si actif est BLOCK_IO on le place dans la queue des bloqués IO
+                queue_add(actif, &queue_process_blocked_IO, processus_t, link, prio);
                 break;
             default:
                 // Cas ELU ou autre, on le remet dans la queue des processus en ACTIVABLE

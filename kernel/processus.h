@@ -57,6 +57,7 @@ extern link queue_process;
 extern link queue_process_sleeping;
 extern link queue_process_zombie;
 extern link queue_process_blocked;
+extern link queue_process_blocked_IO;
 
 extern processus_t* processus_tab[NBPROC];
 

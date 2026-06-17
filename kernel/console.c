@@ -65,7 +65,8 @@ void traite_car(char c)
     // Switch pour les caractères, suivi du placement du curseur
     switch (c)
     {
-    case 8: // Backspace
+    case 8:
+    case 127: // Backspace
         ecrit_car(ROW, COL, ' ', 15, 0, false);
         if(COL > 0) {
             COL--;
