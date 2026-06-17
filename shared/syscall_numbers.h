@@ -22,5 +22,7 @@
 #define SYS_CHPRIO     19
 #define SYS_CONS_READ  20
 #define SYS_CONS_ECHO  21
+#define SYS_INFO       22
+#define SYS_PS         23
 
 #endif

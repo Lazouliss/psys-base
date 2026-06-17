@@ -7,6 +7,7 @@ int chprio(int pid, int newprio);
 void cons_write(unsigned long size, const char *str);
 int cons_read(unsigned long const size, char str[static size]);
 void cons_echo(int on);
+__attribute__((noreturn))
 void exit(int retval);
 int getpid(void);
 int getprio(int pid);
@@ -22,5 +23,7 @@ unsigned long current_clock(void);
 void wait_clock(unsigned long wakeup);
 int start(int (*ptfunc)(void *), unsigned long ssize, int prio, const char *name, void *arg);
 int waitpid(int pid, int *retval);
+void sys_info(void);
+void ps(void);
 
 #endif

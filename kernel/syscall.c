@@ -15,6 +15,16 @@ bool is_valid_user_space(void* ptr, unsigned long size) {
     return (addr >= 0x01000000 && addr + size < 0x03000000);
 }
 
+static void sys_info(void)
+{
+    printf("=== system info ===\n");
+    printf("pid courant: %d\n", getpid());
+    printf("temps ticks: %lu\n", current_clock());
+    ps();
+    list_messages();
+    printf("===================\n");
+}
+
 int32_t syscall_PIT(int32_t num, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5)
 {
     switch (num) {
@@ -57,6 +67,8 @@ int32_t syscall_PIT(int32_t num, int32_t a1, int32_t a2, int32_t a3, int32_t a4,
             if (!is_valid_user_space((void *)a2, (unsigned long)a1)) { return -1; }
             return cons_read((unsigned long)a1, (char *)a2);
         case SYS_CONS_ECHO: cons_echo(a1); return 0;
+        case SYS_INFO: sys_info(); return 0;
+        case SYS_PS: ps(); return 0;
         default:
             return -1;
     }
