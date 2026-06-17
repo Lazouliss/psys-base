@@ -10,6 +10,7 @@ int shell(void* arg) {
 
     while(1) {
         printf("super-shell $ ");
+        // TODO: empecher l'utilisateur de supprimer le "super-shell $ "
         read_line(buffer, 100);
         printf("%s\n", buffer);
     }
@@ -32,6 +33,12 @@ int read_line(char* buffer, int max_length) {
 
     while(i < max_length - 1) {
         if (!cons_read(1, &c)) { continue; }
+        if (c == '\b' || c == 127) {
+            if (i == 0) { continue; }
+            i--;
+            buffer[i] = '\0';
+            continue;
+        }
         if (c == '\n' || c == '\r') {
             buffer[i] = '\0';
             break;
