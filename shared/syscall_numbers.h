@@ -20,5 +20,7 @@
 #define SYS_PLC_CURS   17
 #define SYS_DEFILEMENT 18
 #define SYS_CHPRIO     19
+#define SYS_CONS_READ  20
+#define SYS_CONS_ECHO  21
 
 #endif

@@ -1,7 +1,9 @@
 #include "../kernel/func_test.h"
+#include "keyboard-glue.h"
 #include "mem.h"
 #include "syscall.h"
 #include "start.h"
+#include "keyboard.h"
 
 void kernel_start(void)
 {
@@ -14,6 +16,7 @@ void kernel_start(void)
 	//print_horloge("12:34:56");
 	config_horloge();
 	init_syscall(49, traitant_IT_49);
+	init_keyboard();
 	/*************************/
 	/* Tests simples process */
 	/*************************/

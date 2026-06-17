@@ -115,3 +115,5 @@ console_putbytes:
     SYSCALL2 place_curseur, SYS_PLC_CURS
     SYSCALL0 defilement, SYS_DEFILEMENT
     SYSCALL2 chprio, SYS_CHPRIO
+    SYSCALL2 cons_read, SYS_CONS_READ
+    SYSCALL1 cons_echo, SYS_CONS_ECHO
