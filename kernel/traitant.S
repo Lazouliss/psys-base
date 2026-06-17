@@ -56,3 +56,26 @@ traitant_IT_49:
     .globl return_to_user
 return_to_user:
     iret
+
+
+    .globl traitant_IT_33
+traitant_IT_33:
+    pushl %eax
+    pushl %ecx
+    pushl %edx
+    pushl %ds
+    pushl %es
+
+    movw $0x18, %ax
+    movw %ax, %ds
+    movw %ax, %es
+
+    call keyboard_PIT
+
+    popl %es
+    popl %ds
+    popl %edx
+    popl %ecx
+    popl %eax
+
+    iret
