@@ -5,6 +5,7 @@
 #include "horloge.h"
 #include "message.h"
 #include "screen.h"
+#include "keyboard.h"
 
  // Check when args are pointer, if they are in a valid user space address
 bool is_valid_user_space(void* ptr, unsigned long size) {
@@ -52,6 +53,10 @@ int32_t syscall_PIT(int32_t num, int32_t a1, int32_t a2, int32_t a3, int32_t a4,
         case SYS_PLC_CURS: place_curseur((uint32_t)a1, (uint32_t)a2); return 0;
         case SYS_DEFILEMENT: defilement(); return 0;
         case SYS_CHPRIO: return chprio(a1, a2);
+        case SYS_CONS_READ:
+            if (!is_valid_user_space((void *)a2, (unsigned long)a1)) { return -1; }
+            return cons_read((unsigned long)a1, (char *)a2);
+        case SYS_CONS_ECHO: cons_echo(a1); return 0;
         default:
             return -1;
     }
