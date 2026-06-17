@@ -1,7 +1,9 @@
 #include "shell.h"
+#include "func_test.h"
 #include "stdio.h"
 #include "syscall.h"
 #include "string.h"
+#include "stdint.h"
 
 /**
  * Supprime les espaces au début d'une chaine s
@@ -40,6 +42,12 @@ static command_id_t command_id(const char *command)
     if (!strcmp(command, "clear")) {
         return CMD_CLEAR;
     }
+    if (!strcmp(command, "run_tests")) {
+        return CMD_RUN_TESTS;
+    }
+    if (!strcmp(command, "test")) {
+        return CMD_TEST_N;
+    }
     return CMD_UNKNOWN;
 }
 
@@ -55,6 +63,8 @@ static void print_help(void)
     printf("  echo on|off      active/desactive l'echo clavier\n");
     printf("  exit             quitte le shell\n");
     printf("  clear            nettoie la console\n");
+    printf("  run_tests        lance la totalite des tests utilisateur\n");
+    printf("  test N           lance le test N\n");
 }
 
 int shell(void* arg) {
@@ -142,6 +152,15 @@ int exec_command(char* command) {
             return 0;
         case CMD_CLEAR:
             printf("\f");
+            return 0;
+        case CMD_RUN_TESTS:
+            int res = run_test_proc(20);
+            if(!res) {
+                printf("TESTS SUCCEEDED!\n");
+            }
+            return 0;
+        case CMD_TEST_N:
+            printf("TODO\n");
             return 0;
         case CMD_UNKNOWN:
         default:
