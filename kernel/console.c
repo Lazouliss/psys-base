@@ -65,7 +65,8 @@ void traite_car(char c)
     // Switch pour les caractères, suivi du placement du curseur
     switch (c)
     {
-    case 8: // Backspace
+    case 8:
+    case 127: // Backspace
         ecrit_car(ROW, COL, ' ', 15, 0, false);
         if(COL > 0) {
             COL--;
@@ -82,14 +83,12 @@ void traite_car(char c)
         }
         break;
     case 10: // Newline
+    case 13: // Retour chariot (modifier lors des interruptions clavier pour correspondre a la touche entree)
         COL = 0;
         ROW++; // Dépassement de la dernière ligne, prit en compte par défillement() dans console_putbytes()
         break;
     case 12: // efface l'écran
         efface_ecran();
-        break;
-    case 13: // Retour chariot
-        COL = 0;
         break;
     case 32 ... 126:
         // Comportement par défaut : Afficher le caractère à la position actuelle du curseur
