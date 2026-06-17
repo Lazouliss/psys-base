@@ -37,6 +37,9 @@ static command_id_t command_id(const char *command)
     if (!strcmp(command, "help")) {
         return CMD_HELP;
     }
+    if (!strcmp(command, "clear")) {
+        return CMD_CLEAR;
+    }
     return CMD_UNKNOWN;
 }
 
@@ -51,6 +54,7 @@ static void print_help(void)
     printf("  ps               affiche la liste des processus\n");
     printf("  echo on|off      active/desactive l'echo clavier\n");
     printf("  exit             quitte le shell\n");
+    printf("  clear            nettoie la console\n");
 }
 
 int shell(void* arg) {
@@ -135,6 +139,9 @@ int exec_command(char* command) {
         }
         case CMD_HELP:
             print_help();
+            return 0;
+        case CMD_CLEAR:
+            printf("\f");
             return 0;
         case CMD_UNKNOWN:
         default:

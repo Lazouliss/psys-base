@@ -8,6 +8,7 @@ typedef enum {
     CMD_EXIT,
     CMD_ECHO,
     CMD_HELP,
+    CMD_CLEAR,
     CMD_UNKNOWN
 } command_id_t;
 
