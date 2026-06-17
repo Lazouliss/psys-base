@@ -109,7 +109,7 @@ int cons_read(unsigned long size, char str[static size])
     unsigned long i = 0;
 
     // Lorsque le buffer est vide, on bloque le processus actif et on l'ajoute à la queue des processus bloqués sur IO
-    if (!keyboard_has_char()) {
+    while (!keyboard_has_char()) {
         actif = queue_out(&queue_process, processus_t, link);
         assert(actif);
         actif->state = BLOCK_IO;
