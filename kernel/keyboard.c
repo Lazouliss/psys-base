@@ -75,6 +75,8 @@ void keyboard_data(char *str)
         if (echo_enabled) {
             if (*str == '\r') {
                 cons_write(1, "\n");
+            } else if (*str == 127) { // Backspace
+                cons_write(3, "\b \b");
             } else {
                 cons_write(1, str);
             }
