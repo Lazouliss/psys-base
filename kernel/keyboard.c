@@ -1,7 +1,7 @@
 #include "keyboard.h"
 #include "keyboard-glue.h"
 #include "kbd.h"
-#include "cpu.h"
+#include "processus.h"
 #include "console.h"
 #include "horloge.h"
 
@@ -79,10 +79,15 @@ void keyboard_data(char *str)
         str++;
     }
 
-    /*
-     * Plus tard : réveiller ici les processus bloqués dans cons_read.
-     * Par exemple : passer leur état BLOCK_IO -> ACTIVABLE.
-     */
+    // reveil des processus bloqués sur cons_read
+    processus_t* proc;
+    while (!queue_empty(&queue_process_blocked_IO)) {
+        proc = queue_out(&queue_process_blocked_IO, processus_t, link);
+        assert(proc);
+
+        proc->state = ACTIVABLE;
+        queue_add(proc, &queue_process, processus_t, link, prio);
+    }
 }
 
 void cons_echo(int on)
@@ -98,6 +103,16 @@ void kbd_leds(unsigned char leds)
 int cons_read(unsigned long size, char str[static size])
 {
     unsigned long i = 0;
+
+    // Lorsque le buffer est vide, on bloque le processus actif et on l'ajoute à la queue des processus bloqués sur IO
+    if (!keyboard_has_char()) {
+        actif = queue_out(&queue_process, processus_t, link);
+        assert(actif);
+        actif->state = BLOCK_IO;
+        queue_add(actif, &queue_process_blocked_IO, processus_t, link, prio);
+        // Il sera reveillé par keyboard_data() lorsqu'un caractère sera disponible
+        ordonnance();
+    }
 
     while (i < size && keyboard_has_char()) {
         str[i++] = keyboard_pop_char();
