@@ -117,3 +117,11 @@ console_putbytes:
     SYSCALL2 chprio, SYS_CHPRIO
     SYSCALL2 cons_read, SYS_CONS_READ
     SYSCALL1 cons_echo, SYS_CONS_ECHO
+    SYSCALL1 screate, SYS_SCREATE
+    SYSCALL1 sdelete, SYS_SDELETE
+    SYSCALL1 signal, SYS_SIGNAL
+    SYSCALL2 signaln, SYS_SIGNALN
+    SYSCALL1 wait, SYS_WAIT
+    SYSCALL1 try_wait, SYS_TRY_WAIT
+    SYSCALL1 scount, SYS_SCOUNT
+    SYSCALL2 sreset, SYS_SRESET

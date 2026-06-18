@@ -6,6 +6,7 @@
 #include "message.h"
 #include "screen.h"
 #include "keyboard.h"
+#include "semaphore.h"
 
  // Check when args are pointer, if they are in a valid user space address
 bool is_valid_user_space(void* ptr, unsigned long size) {
@@ -57,6 +58,14 @@ int32_t syscall_PIT(int32_t num, int32_t a1, int32_t a2, int32_t a3, int32_t a4,
             if (!is_valid_user_space((void *)a2, (unsigned long)a1)) { return -1; }
             return cons_read((unsigned long)a1, (char *)a2);
         case SYS_CONS_ECHO: cons_echo(a1); return 0;
+        case SYS_SCREATE: return screate((short int)a1);
+        case SYS_SDELETE: return sdelete(a1);
+        case SYS_SIGNAL: return signal(a1);
+        case SYS_SIGNALN: return signaln(a1, (short int)a2);
+        case SYS_WAIT: return wait(a1);
+        case SYS_TRY_WAIT: return try_wait(a1);
+        case SYS_SCOUNT: return scount(a1);
+        case SYS_SRESET: return sreset(a1, (short int)a2);
         default:
             return -1;
     }

@@ -22,5 +22,13 @@
 #define SYS_CHPRIO     19
 #define SYS_CONS_READ  20
 #define SYS_CONS_ECHO  21
+#define SYS_SCREATE    24
+#define SYS_SDELETE    25
+#define SYS_SIGNAL     26
+#define SYS_SIGNALN    27
+#define SYS_WAIT       28
+#define SYS_TRY_WAIT   29
+#define SYS_SCOUNT     30
+#define SYS_SRESET     31
 
 #endif
