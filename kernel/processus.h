@@ -71,6 +71,7 @@ int getprio(int pid);
 int chprio(int pid, int newprio);
 
 void ordonnance(void);
+void ps(void);
 
 int start(int (*pt_func)(void*), [[maybe_unused]] unsigned long ssize_user, int prio, const char* name, void *arg);
 void wait_clock(uint32_t nbr_secs);

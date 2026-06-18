@@ -591,3 +591,43 @@ void wait_clock(uint32_t date_tick) {
 
     ordonnance(); // Appeler l'ordonnanceur pour switcher vers un autre processus pendant que celui-ci est endormi
 }
+
+/**
+ * Renvoie le nom associé à un state
+ * 
+ * states state : l'état du processus
+ * return : le nom de l'état du processus
+ */
+static const char *state_name(states state)
+{
+    switch (state) {
+        case ACTIVABLE: return "ACTIVABLE";
+        case ELU: return "ELU";
+        case ENDORMI: return "ENDORMI";
+        case BLOCK_MSG_RCV: return "BLOCK_MSG_RCV";
+        case BLOCK_MSG_SND: return "BLOCK_MSG_SND";
+        case BLOCK_SEM: return "BLOCK_SEM";
+        case BLOCK_IO: return "BLOCK_IO";
+        case BLOCK_CHILD: return "BLOCK_CHILD";
+        case ZOMBIE: return "ZOMBIE";
+        case DYING: return "DYING";
+        default: return "UNKNOWN";
+    }
+}
+
+/**
+ * Affiche la liste des processus avec leur états et leur parent
+ */
+void ps(void)
+{
+    // TODO: renvoyer une structure de données et faire l'affichage côté user
+    printf("PID PPID PRIO STATE          NAME\n");
+    for (int i = 0; i < NBPROC; i++) {
+        processus_t *proc = processus_tab[i];
+        if (proc) {
+            printf("%3u %4u %4d %-14s %s\n",
+                   proc->pid, proc->p_pid, proc->prio,
+                   state_name(proc->state), proc->name);
+        }
+    }
+}

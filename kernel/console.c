@@ -4,9 +4,21 @@
 uint16_t ROW = 0;
 uint16_t COL = 0;
 
+uint8_t BG_COLOR = DEFAULT_BG_COLOR;
+uint8_t FG_COLOR = DEFAULT_FG_COLOR;
+
 const uint16_t* ptr_mem(uint32_t lig, uint32_t col)
 {
     return VGABASE + (lig * COL_MAX + col);
+}
+
+void change_colors(uint8_t ct, uint8_t cf) {
+    if (ct > 0 || ct < 8) {
+        BG_COLOR = ct;
+    }
+    if (cf > 0 || cf < 16) {
+        FG_COLOR = cf;
+    }
 }
 
 /*
@@ -42,8 +54,8 @@ void efface_ecran(void)
 {
     for (uint32_t lig = 0; lig < ROW_MAX; lig++) {
         for (uint32_t col = 0; col < COL_MAX; col++) {
-            // Efface l'écran en écrivant un espace avec les couleurs par défaut (caractère blanc sur fond noir)
-            ecrit_car(lig, col, ' ', 15, 0, false);
+            // Efface l'écran en écrivant un espace avec les couleurs par défaut (caractère blanc 15 sur fond noir 0)
+            ecrit_car(lig, col, ' ', FG_COLOR, BG_COLOR, false);
         }
     }
     ROW = 0;
@@ -67,7 +79,7 @@ void traite_car(char c)
     {
     case 8:
     case 127: // Backspace
-        ecrit_car(ROW, COL, ' ', 15, 0, false);
+        ecrit_car(ROW, COL, ' ', FG_COLOR, BG_COLOR, false);
         if(COL > 0) {
             COL--;
         } else if(ROW > 0) {
@@ -94,7 +106,7 @@ void traite_car(char c)
         break;
     case 32 ... 126:
         // Comportement par défaut : Afficher le caractère à la position actuelle du curseur
-        ecrit_car(ROW, COL, c, 15, 0, false); // Affiche le caractère avec les couleurs par défaut
+        ecrit_car(ROW, COL, c, FG_COLOR, BG_COLOR, false); // Affiche le caractère avec les couleurs par défaut
         place_next_pos_cursor();
         break;
     default:
@@ -109,7 +121,7 @@ void defilement()
     memmove((void*)ptr_mem(0, 0), (void*)ptr_mem(1, 0), (ROW_MAX - 1) * COL_MAX * sizeof(uint16_t));
     // Efface la dernière ligne après le défilement
     for (uint32_t col = 0; col < COL_MAX; col++) {
-        ecrit_car(ROW_MAX - 1, col, ' ', 15, 0, false); // Efface la dernière ligne
+        ecrit_car(ROW_MAX - 1, col, ' ', FG_COLOR, BG_COLOR, false); // Efface la dernière ligne
     }
 }
 
