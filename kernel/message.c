@@ -247,3 +247,60 @@ int preset(int fid) {
 
     return 0;
 }
+
+/**
+ * Compte le nom de processus dans une queue
+ * 
+ * link *queue : queue dont on veut le nombre de processus 
+ * return : le nombre de processus
+ */
+static int count_queue_processes(link *queue)
+{
+    processus_t *proc;
+    int count = 0;
+
+    queue_for_each(proc, queue, processus_t, link) {
+        count++;
+    }
+
+    return count;
+}
+
+/**
+ * Liste toutes les files de messages
+ * 
+ * Colonnes :
+ * - FID : identifiant de la file
+ * - CAPACITY : capacité max
+ * - COUNT : messages actuellement dans le buffer
+ * - FREE : places libres
+ * - SEND_BLOCK : processus bloqués en psend
+ * - RECV_BLOCK : processus bloqués en preceive
+ */
+void list_messages(void)
+{
+    int total = 0;
+
+    printf("FID CAPACITY COUNT FREE SEND_BLOCK RECV_BLOCK\n");
+    for (int fid = 0; fid < NBQUEUE; fid++) {
+        message_t *msg = message_tab[fid];
+        if (!msg) {
+            continue;
+        }
+
+        printf("%3u %8u %5u %4u %10d %10d\n",
+               msg->fid,
+               msg->capacity,
+               msg->count,
+               msg->capacity - msg->count,
+               count_queue_processes(&msg->sender_queue),
+               count_queue_processes(&msg->receiver_queue));
+        total++;
+    }
+
+    if (total == 0) {
+        printf("aucune file de messages\n");
+    } else {
+        printf("total=%d\n", total);
+    }
+}

@@ -32,4 +32,6 @@ int pcount(int fid, int count[static 1]);
 int pdelete(int fid);
 int preset(int fid);
 
+void list_messages(void);
+
 #endif

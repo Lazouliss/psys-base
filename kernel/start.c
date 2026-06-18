@@ -24,7 +24,7 @@ void kernel_start(void)
 	// Initialisation du processus idle
 	processus_t* idle_process = mem_alloc(sizeof(processus_t));
 	idle_process->pid = 0;
-	idle_process->p_pid = -1;
+	idle_process->p_pid = 0;
 	idle_process->name[0] = 'i';
 	idle_process->name[1] = 'd';
 	idle_process->name[2] = 'l';
