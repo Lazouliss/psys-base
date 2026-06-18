@@ -290,7 +290,7 @@ int exec_command(char* command) {
             return command_colors(command);
         case CMD_UNKNOWN:
         default:
-            printf("commande inconnue: %s\nEssaie la commande 'help'", command);
+            printf("commande inconnue: %s\nEssaie la commande 'help'\n", command);
             return -1;
     }
 }
