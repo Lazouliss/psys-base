@@ -1,7 +1,5 @@
 #include "func_test.h"
 
-int test_run(int n);
-
 /**************************/
 /* Décla function process */
 /**************************/

@@ -45,7 +45,7 @@ static command_id_t command_id(const char *command)
     if (!strcmp(command, "run_tests")) {
         return CMD_RUN_TESTS;
     }
-    if (!strcmp(command, "test")) {
+    if (!strcmp(command, "test_run") || !strncmp(command, "test_run ", 9)) {
         return CMD_TEST_N;
     }
     return CMD_UNKNOWN;
@@ -57,14 +57,14 @@ static command_id_t command_id(const char *command)
 static void print_help(void)
 {
     printf("Commandes disponibles:\n");
-    printf("  help             affiche cette aide\n");
-    printf("  sys_info | si    affiche les infos systeme\n");
-    printf("  ps               affiche la liste des processus\n");
-    printf("  echo on|off      active/desactive l'echo clavier\n");
-    printf("  exit             quitte le shell\n");
-    printf("  clear            nettoie la console\n");
-    printf("  run_tests        lance la totalite des tests utilisateur\n");
-    printf("  test N           lance le test N\n");
+    printf("  help                  affiche cette aide\n");
+    printf("  sys_info | si         affiche les infos systeme\n");
+    printf("  ps                    affiche la liste des processus\n");
+    printf("  echo on|off           active/desactive l'echo clavier\n");
+    printf("  exit                  quitte le shell\n");
+    printf("  clear                 nettoie la console\n");
+    printf("  run_tests             lance la totalite des tests utilisateur\n");
+    printf("  test_run N            lance le test N\n");
 }
 
 int shell(void* arg) {
@@ -115,6 +115,52 @@ int read_line(char* buffer, int max_length) {
 }
 
 /**
+ * Fonction power équivalente à celle de math.h
+ * 
+ * int fact : facteur dont on veut la puissance
+ * int pow : puissance voulue 
+ * return : fact^pow
+ */
+uint32_t power(int fact, int pow) {
+    uint32_t result = 1;
+
+    if (pow < 0) {
+        return 0;
+    }
+
+    for (int i = 0; i < pow; i++) {
+        result *= (uint32_t)fact;
+    }
+
+    return result;
+}
+
+/**
+ * Fonction atoi de C, converti str en entier
+ * 
+ */
+int atoi(char* str) {
+    int result = 0;
+    int sign = 1;
+
+    str = skip_spaces(str);
+
+    if (*str == '-') {
+        sign = -1;
+        str++;
+    } else if (*str == '+') {
+        str++;
+    }
+
+    while (*str >= '0' && *str <= '9') {
+        result = result * 10 + (*str - '0');
+        str++;
+    }
+
+    return sign * result;
+}
+
+/**
  * Execute la commande "command" via un appel système
  */
 int exec_command(char* command) {
@@ -160,7 +206,9 @@ int exec_command(char* command) {
             }
             return 0;
         case CMD_TEST_N:
-            printf("TODO\n");
+            char *arg = skip_spaces(command + 8);
+            int number = atoi(arg);
+            test_run(number);
             return 0;
         case CMD_UNKNOWN:
         default:

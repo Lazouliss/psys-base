@@ -5,5 +5,6 @@
 
 int run_test_proc(int max_test);
 int test1(int i);
+int test_run(int n);
 
 #endif
