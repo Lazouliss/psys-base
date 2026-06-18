@@ -11,6 +11,7 @@ static char keyboard_buffer[KEYBOARD_BUFFER_SIZE];
 static unsigned read_pos = 0;
 static unsigned write_pos = 0;
 static bool echo_enabled = true;
+static unsigned line_count = 0;
 
 void init_keyboard(void) {
 	init_traitant_IT(33, traitant_IT_33);
@@ -72,6 +73,10 @@ void keyboard_data(char *str)
     while (*str) {
         buffer_push(*str);
 
+        if (*str == '\r' || *str == '\n') {
+            line_count++;
+        }
+
         if (echo_enabled) {
             if (*str == '\r') {
                 cons_write(1, "\n");
@@ -86,13 +91,15 @@ void keyboard_data(char *str)
     }
 
     // reveil des processus bloqués sur cons_read
-    processus_t* proc;
-    while (!queue_empty(&queue_process_blocked_IO)) {
-        proc = queue_out(&queue_process_blocked_IO, processus_t, link);
-        assert(proc);
+    if (line_count > 0) {
+        processus_t* proc;
+        while (!queue_empty(&queue_process_blocked_IO)) {
+            proc = queue_out(&queue_process_blocked_IO, processus_t, link);
+            assert(proc);
 
-        proc->state = ACTIVABLE;
-        queue_add(proc, &queue_process, processus_t, link, prio);
+            proc->state = ACTIVABLE;
+            queue_add(proc, &queue_process, processus_t, link, prio);
+        }
     }
 }
 
@@ -111,7 +118,7 @@ int cons_read(unsigned long size, char str[static size])
     unsigned long i = 0;
 
     // Lorsque le buffer est vide, on bloque le processus actif et on l'ajoute à la queue des processus bloqués sur IO
-    while (!keyboard_has_char()) {
+    while (line_count == 0) {
         actif = queue_out(&queue_process, processus_t, link);
         assert(actif);
         actif->state = BLOCK_IO;
@@ -121,7 +128,13 @@ int cons_read(unsigned long size, char str[static size])
     }
 
     while (i < size && keyboard_has_char()) {
-        str[i++] = keyboard_pop_char();
+        char c = keyboard_pop_char();
+        str[i++] = c;
+
+        if (c == '\r' || c == '\n') {
+            line_count--;
+            break;
+        }
     }
 
     return i;
