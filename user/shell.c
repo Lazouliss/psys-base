@@ -94,6 +94,9 @@ static command_id_t command_id(const char *command)
     if (!strcmp(command, "test_run") || !strncmp(command, "test_run ", 9)) {
         return CMD_TEST_N;
     }
+    if (!strcmp(command, "test_sys_info")) {
+        return CMD_TEST_SYS_INFO;
+    }
     if (!strcmp(command, "colors") || !strncmp(command, "colors ", 7)) {
         return CMD_COLOR;
     }
@@ -117,6 +120,7 @@ static void print_help(void)
     printf("  colors --reset        remet les couleurs par defaut\n");
     printf("  run_tests             lance la totalite des tests utilisateur\n");
     printf("  test_run N            lance le test N\n");
+    printf("  test_sys_info         teste l'affichage sys_info\n");
 }
 
 /**
@@ -286,6 +290,8 @@ int exec_command(char* command) {
             int number = atoi(arg);
             test_run(number);
             return 0;
+        case CMD_TEST_SYS_INFO:
+            return test_sys_info();
         case CMD_COLOR: 
             return command_colors(command);
         case CMD_UNKNOWN:

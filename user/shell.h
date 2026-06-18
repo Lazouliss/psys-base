@@ -11,6 +11,7 @@ typedef enum {
     CMD_CLEAR,
     CMD_RUN_TESTS,
     CMD_TEST_N,
+    CMD_TEST_SYS_INFO,
     CMD_COLOR,
     CMD_UNKNOWN
 } command_id_t;

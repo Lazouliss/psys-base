@@ -22,7 +22,6 @@ static void sys_info(void)
     printf("temps ticks: %lu\n", current_clock());
     ps();
     list_messages();
-    printf("===================\n");
 }
 
 int32_t syscall_PIT(int32_t num, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5)
