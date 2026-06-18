@@ -8,6 +8,7 @@
 #include "processor_structs.h"
 #include "syscall.h"
 #include "string.h"
+#include "semaphore.h"
 
 // initialisation de la table des processus
 link queue_process = LIST_HEAD_INIT(queue_process);
@@ -385,6 +386,12 @@ void ordonnance(void) {
             case BLOCK_IO:
                 // si actif est BLOCK_IO on le place dans la queue des bloqués IO
                 queue_add(actif, &queue_process_blocked_IO, processus_t, link, prio);
+                break;
+            case BLOCK_SEM:
+                // si actif est BLOCK_SEM on le place dans la queue du semaphore
+                if (actif->blocking_fid >= 0 && actif->blocking_fid < NBSEMS && semaphore_tab[actif->blocking_fid]) {
+                    queue_add(actif, &semaphore_tab[actif->blocking_fid]->wait_queue, processus_t, link, prio);
+                }
                 break;
             default:
                 // Cas ELU ou autre, on le remet dans la queue des processus en ACTIVABLE

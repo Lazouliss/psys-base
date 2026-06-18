@@ -35,6 +35,7 @@ typedef struct processus
     int retval;
 
     int32_t blocking_fid;           // le fid de la file de message sur laquelle il est bloqué ou -1 si le processus était bloqué et que fid a été pdelete
+    int32_t blocking_sem_ret;       // code de retour spécial pour wake sur sémaphore
     int message;                    // message reçu par le processus
 
     char name[NAME_MAX_LEN];
