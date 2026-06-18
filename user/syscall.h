@@ -25,5 +25,6 @@ int start(int (*ptfunc)(void *), unsigned long ssize, int prio, const char *name
 int waitpid(int pid, int *retval);
 void sys_info(void);
 void ps(void);
+void change_colors(int ct, int cf);
 
 #endif

@@ -24,5 +24,6 @@
 #define SYS_CONS_ECHO  21
 #define SYS_INFO       22
 #define SYS_PS         23
+#define SYS_CHANGE_COLORS 24
 
 #endif

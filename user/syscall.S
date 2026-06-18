@@ -119,3 +119,4 @@ console_putbytes:
     SYSCALL1 cons_echo, SYS_CONS_ECHO
     SYSCALL0 sys_info, SYS_INFO
     SYSCALL0 ps, SYS_PS
+    SYSCALL2 change_colors, SYS_CHANGE_COLORS

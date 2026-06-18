@@ -17,6 +17,52 @@ static char *skip_spaces(char *s)
 }
 
 /**
+ * Fonction power équivalente à celle de math.h
+ * 
+ * int fact : facteur dont on veut la puissance
+ * int pow : puissance voulue 
+ * return : fact^pow
+ */
+uint32_t power(int fact, int pow) {
+    uint32_t result = 1;
+
+    if (pow < 0) {
+        return 0;
+    }
+
+    for (int i = 0; i < pow; i++) {
+        result *= (uint32_t)fact;
+    }
+
+    return result;
+}
+
+/**
+ * Fonction atoi de C, converti str en entier
+ * 
+ */
+int atoi(char* str) {
+    int result = 0;
+    int sign = 1;
+
+    str = skip_spaces(str);
+
+    if (*str == '-') {
+        sign = -1;
+        str++;
+    } else if (*str == '+') {
+        str++;
+    }
+
+    while (*str >= '0' && *str <= '9') {
+        result = result * 10 + (*str - '0');
+        str++;
+    }
+
+    return sign * result;
+}
+
+/**
  * Converti une chaine de caratère en identifiant
  */
 static command_id_t command_id(const char *command)
@@ -48,6 +94,9 @@ static command_id_t command_id(const char *command)
     if (!strcmp(command, "test_run") || !strncmp(command, "test_run ", 9)) {
         return CMD_TEST_N;
     }
+    if (!strcmp(command, "colors") || !strncmp(command, "colors ", 7)) {
+        return CMD_COLOR;
+    }
     return CMD_UNKNOWN;
 }
 
@@ -63,8 +112,81 @@ static void print_help(void)
     printf("  echo on|off           active/desactive l'echo clavier\n");
     printf("  exit                  quitte le shell\n");
     printf("  clear                 nettoie la console\n");
+    printf("  colors CT CF          change les couleurs\n");
+    printf("  colors --help         affiche les couleurs disponibles\n");
+    printf("  colors --reset        remet les couleurs par defaut\n");
     printf("  run_tests             lance la totalite des tests utilisateur\n");
     printf("  test_run N            lance le test N\n");
+}
+
+/**
+ * Affiche l'aide de la commande colors
+ */
+void print_colors_help(void) {
+    printf("usage:\n");
+    printf("  colors CT CF\n");
+    printf("  colors --reset\n");
+    printf("  colors --help\n");
+    printf("\n");
+    printf("CT = couleur de fond, 0-7\n");
+    printf("CF = couleur du texte, 0-15\n");
+    printf("\n");
+    printf("Change les couleurs (fond 0-7, texte 0-15) en suivant le tableau suivant :\n");
+    printf("+-----+---------+-----+----------+-----+-------------+-----+----------------+\n");
+    printf("| val | couleur | val | couleur  | val | couleur     | val | couleur        |\n");
+    printf("+=====+=========+=====+==========+=====+=============+=====+================+\n");
+    printf("| 0   | noir    | 4   | rouge    | 8   | gris fonce  | 12  | rouge clair    |\n");
+    printf("+-----+---------+-----+----------+-----+-------------+-----+----------------+\n");
+    printf("| 1   | bleu    | 5   | magenta  | 9   | bleu clair  | 13  | magenta clair  |\n");
+    printf("+-----+---------+-----+----------+-----+-------------+-----+----------------+\n");
+    printf("| 2   | vert    | 6   | marron   | 10  | vert clair  | 14  | jaune          |\n");
+    printf("+-----+---------+-----+----------+-----+-------------+-----+----------------+\n");
+    printf("| 3   | cyan    | 7   | gris     | 11  | cyan clair  | 15  | blanc          |\n");
+    printf("+-----+---------+-----+----------+-----+-------------+-----+----------------+\n");
+
+}
+
+/**
+ * Gère les différentes options de la commande 'colors'
+ * 
+ * char* command : 'colors' avec ses arguments
+ * return : 0 si tout va bien, -1 sinon
+ */
+int command_colors(char* command) {
+    char *arg = skip_spaces(command + 6);
+
+    if (!strcmp(arg, "--help")) {
+        print_colors_help();
+        return 0;
+    }
+
+    if (!strcmp(arg, "--reset")) {
+        change_colors(0, 15);
+        printf("colors reset\n");
+        return 0;
+    }
+
+    int ct = atoi(arg);
+
+    while (*arg && *arg != ' ' && *arg != '\t') {
+        arg++;
+    }
+    arg = skip_spaces(arg);
+
+    if (*arg == '\0') {
+        printf("usage: colors CT CF\n");
+        return -1;
+    }
+
+    int cf = atoi(arg);
+
+    if (ct < 0 || ct > 7 || cf < 0 || cf > 15) {
+        printf("usage: colors CT CF (CT 0-7, CF 0-15)\n");
+        return -1;
+    }
+
+    change_colors(ct, cf);
+    return 0;
 }
 
 int shell(void* arg) {
@@ -112,52 +234,6 @@ int read_line(char* buffer, int max_length) {
     }
 
     return i;
-}
-
-/**
- * Fonction power équivalente à celle de math.h
- * 
- * int fact : facteur dont on veut la puissance
- * int pow : puissance voulue 
- * return : fact^pow
- */
-uint32_t power(int fact, int pow) {
-    uint32_t result = 1;
-
-    if (pow < 0) {
-        return 0;
-    }
-
-    for (int i = 0; i < pow; i++) {
-        result *= (uint32_t)fact;
-    }
-
-    return result;
-}
-
-/**
- * Fonction atoi de C, converti str en entier
- * 
- */
-int atoi(char* str) {
-    int result = 0;
-    int sign = 1;
-
-    str = skip_spaces(str);
-
-    if (*str == '-') {
-        sign = -1;
-        str++;
-    } else if (*str == '+') {
-        str++;
-    }
-
-    while (*str >= '0' && *str <= '9') {
-        result = result * 10 + (*str - '0');
-        str++;
-    }
-
-    return sign * result;
 }
 
 /**
@@ -210,9 +286,11 @@ int exec_command(char* command) {
             int number = atoi(arg);
             test_run(number);
             return 0;
+        case CMD_COLOR: 
+            return command_colors(command);
         case CMD_UNKNOWN:
         default:
-            printf("commande inconnue: %s\n", command);
+            printf("commande inconnue: %s\nEssaie la commande 'help'", command);
             return -1;
     }
 }
